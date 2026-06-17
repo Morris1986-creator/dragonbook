@@ -63,32 +63,32 @@
   }
   @keyframes splashIn{from{opacity:0;transform:translateY(18px) scale(.92)}to{opacity:1;transform:none}}
   .splash-ring{
-    position:absolute;top:50%;left:50%;transform:translate(-50%,-62%);
-    width:148px;height:148px;border-radius:50%;
-    border:1.5px solid rgba(201,162,75,.18);
-    box-shadow:0 0 0 10px rgba(183,64,59,.06), 0 0 60px 0 rgba(183,64,59,.18);
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-58%);
+    width:230px;height:230px;border-radius:50%;
+    border:1.5px solid rgba(201,162,75,.22);
+    box-shadow:0 0 0 18px rgba(183,64,59,.05), 0 0 90px 0 rgba(183,64,59,.22);
     animation:ringPulse 2.4s ease-in-out infinite;
   }
-  @keyframes ringPulse{0%,100%{opacity:.5;transform:translate(-50%,-62%) scale(1)}50%{opacity:1;transform:translate(-50%,-62%) scale(1.04)}}
+  @keyframes ringPulse{0%,100%{opacity:.5;transform:translate(-50%,-58%) scale(1)}50%{opacity:1;transform:translate(-50%,-58%) scale(1.04)}}
   .splash-crest{
-    width:100px;height:100px;color:var(--gold);
-    filter:drop-shadow(0 6px 24px rgba(183,64,59,.55)) drop-shadow(0 0 8px rgba(201,162,75,.3));
+    width:160px;height:160px;color:var(--gold);
+    filter:drop-shadow(0 8px 36px rgba(183,64,59,.65)) drop-shadow(0 0 14px rgba(201,162,75,.4));
     animation:crestGlow 2.4s ease-in-out infinite;
   }
   .splash-crest svg{width:100%;height:100%}
-  @keyframes crestGlow{0%,100%{filter:drop-shadow(0 6px 24px rgba(183,64,59,.55)) drop-shadow(0 0 8px rgba(201,162,75,.3))}50%{filter:drop-shadow(0 6px 32px rgba(183,64,59,.8)) drop-shadow(0 0 18px rgba(201,162,75,.55))}}
+  @keyframes crestGlow{0%,100%{filter:drop-shadow(0 8px 36px rgba(183,64,59,.65)) drop-shadow(0 0 14px rgba(201,162,75,.4))}50%{filter:drop-shadow(0 8px 48px rgba(183,64,59,.9)) drop-shadow(0 0 28px rgba(201,162,75,.65))}}
   .splash-wordmark{
-    font-family:'Cinzel',serif;font-weight:800;font-size:2.1rem;letter-spacing:.18em;
-    margin-top:22px;color:var(--bone);
+    font-family:'Cinzel',serif;font-weight:800;font-size:2.9rem;letter-spacing:.18em;
+    margin-top:30px;color:var(--bone);
   }
   .splash-wordmark span{color:var(--gold);}
   .splash-tagline{
-    color:var(--muted);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;
-    margin-top:7px;font-family:'Space Mono',monospace;
+    color:var(--muted);font-size:.72rem;letter-spacing:.30em;text-transform:uppercase;
+    margin-top:10px;font-family:'Space Mono',monospace;
   }
   .splash-bar{
-    width:120px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;
-    margin-top:36px;overflow:hidden;
+    width:200px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;
+    margin-top:52px;overflow:hidden;
   }
   .splash-fill{
     height:100%;width:0%;background:linear-gradient(90deg,var(--crimson),var(--gold));
