@@ -875,6 +875,14 @@
     </div>
 
     <div class="field">
+      <label>Magic bonus — to hit &amp; damage</label>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="stepper"><button onclick="cwBumpBonus(-1)">−</button><div class="sv" id="cw-bonus">+0</div><button onclick="cwBumpBonus(1)">+</button></div>
+        <span style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted)">Adds to both attack roll and damage</span>
+      </div>
+    </div>
+
+    <div class="field">
       <label>Lore / description — optional</label>
       <textarea class="lore-field" id="cw-lore" placeholder="Forged from the scales of a green dragon…"></textarea>
     </div>
@@ -2147,6 +2155,7 @@ function rollInTray(container, dice){
 let craftedWeapons=[];
 let cwEdit=null, editingCwId=null;
 const CW_PROPS=['Finesse','Light','Heavy','Two-Handed','Reach','Thrown','Ammunition','Versatile'];
+function cwBumpBonus(d){ cwEdit.bonus=Math.max(0,Math.min(5,(cwEdit.bonus||0)+d)); document.getElementById('cw-bonus').textContent='+'+(cwEdit.bonus||0); }
 
 /* extend Store with crafting persistence */
 Store.loadCraft=async function(){
@@ -2192,8 +2201,8 @@ function renderCraftList(){
   box.innerHTML=craftedWeapons.map(cw=>{
     const props=(cw.props||[]).map(p=>`<span class="craft-prop">${p}</span>`).join('');
     return `<div class="craft-card">
-      <div class="craft-name">${esc(cw.name)}</div>
-      <div class="craft-stats">${cw.n}d${cw.s} ${cw.type||''}</div>
+      <div class="craft-name">${esc(cw.name)}${cw.bonus?` <span style="color:var(--gold-hi);font-size:.8rem">+${cw.bonus}</span>`:''}</div>
+      <div class="craft-stats">${cw.n}d${cw.s}${cw.bonus?'+'+cw.bonus:''} ${cw.type||''}</div>
       ${props?`<div class="craft-props">${props}</div>`:''}
       ${cw.lore?`<div class="craft-lore">${esc(cw.lore)}</div>`:''}
       <div class="craft-btns">
@@ -2231,10 +2240,11 @@ function toggleCwProp(p){
 
 function newCraftWeapon(){
   editingCwId=null;
-  cwEdit={name:'',n:1,s:8,type:'Slashing',props:[],lore:''};
+  cwEdit={name:'',n:1,s:8,type:'Slashing',props:[],bonus:0,lore:''};
   document.getElementById('craftEditTitle').textContent='Forge weapon';
   document.getElementById('cw-name').value='';
   document.getElementById('cw-n').textContent='1';
+  document.getElementById('cw-bonus').textContent='+0';
   document.getElementById('cw-type').value='Slashing';
   document.getElementById('cw-lore').value='';
   document.getElementById('cw-delete').style.display='none';
@@ -2243,10 +2253,11 @@ function newCraftWeapon(){
 function editCraftWeapon(id){
   const cw=craftedWeapons.find(x=>x.id===id); if(!cw) return;
   editingCwId=id;
-  cwEdit={name:cw.name,n:cw.n,s:cw.s,type:cw.type||'',props:[...(cw.props||[])],lore:cw.lore||''};
+  cwEdit={name:cw.name,n:cw.n,s:cw.s,type:cw.type||'',props:[...(cw.props||[])],bonus:cw.bonus||0,lore:cw.lore||''};
   document.getElementById('craftEditTitle').textContent='Edit weapon';
   document.getElementById('cw-name').value=cw.name;
   document.getElementById('cw-n').textContent=cw.n;
+  document.getElementById('cw-bonus').textContent='+'+(cw.bonus||0);
   document.getElementById('cw-type').value=cw.type||'';
   document.getElementById('cw-lore').value=cw.lore||'';
   document.getElementById('cw-delete').style.display='block';
@@ -2312,11 +2323,12 @@ async function doAssignCraft(charId,cwId){
   const c=chars.find(x=>x.id===charId); if(!c) return;
   const cw=craftedWeapons.find(x=>x.id===cwId); if(!cw) return;
   if(!c.attacks) c.attacks=[];
+  const bonus=cw.bonus||0;
   const atk={
     id:'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-    name:cw.name, weapon:cw.name, hands:1,
-    base:{n:cw.n,s:cw.s}, auto:true, ability:'auto', prof:true, toHit:0,
-    dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0}, type:cw.type||'', combos:[]
+    name:cw.name+(bonus?` +${bonus}`:''), weapon:cw.name, hands:1,
+    base:{n:cw.n,s:cw.s}, auto:true, ability:'auto', prof:true, toHit:bonus,
+    dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:bonus}, type:cw.type||'', combos:[]
   };
   c.attacks.push(atk);
   await Store.save(chars);
