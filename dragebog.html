@@ -513,6 +513,22 @@
   .np-dmg{border-color:var(--crimson);background:rgba(183,64,59,.15);color:#f2c9c7}
   .np-heal{border-color:var(--emerald);background:rgba(95,168,130,.12);color:#cfeede}
 
+  /* ---------- Level-up modal ---------- */
+  .lu-header{text-align:center;margin-bottom:14px}
+  .lu-title{font-family:'Cinzel',serif;font-weight:700;font-size:1.25rem;color:var(--gold);margin-bottom:4px}
+  .lu-sub{font-size:.8rem;color:var(--muted)}
+  .lu-suggest{background:rgba(201,162,75,.1);border:1px solid rgba(201,162,75,.35);border-radius:13px;
+    padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .lu-suggest-text{flex:1}
+  .lu-suggest-label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:'Space Mono',monospace}
+  .lu-suggest-val{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:800;color:var(--gold-hi);line-height:1}
+  .lu-suggest-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+  .lu-use-btn{padding:9px 16px;border-radius:12px;border:1.5px solid var(--gold);background:rgba(201,162,75,.15);
+    color:var(--gold-hi);font-family:'Space Mono',monospace;font-size:.78rem;cursor:pointer;white-space:nowrap}
+  .lu-divider{text-align:center;font-size:.72rem;color:var(--muted);letter-spacing:.1em;margin:10px 0;text-transform:uppercase;font-family:'Space Mono',monospace}
+  .lu-confirm{width:100%;padding:13px;border-radius:14px;border:1.5px solid var(--emerald);
+    background:rgba(95,168,130,.15);color:#cfeede;font-family:'Cinzel',serif;font-size:1rem;font-weight:700;cursor:pointer;margin-top:6px}
+
   /* ---------- Passive Perception ---------- */
   .pp-strip{display:flex;align-items:center;gap:10px;margin-top:10px;
     background:var(--surface);border:1px solid var(--edge);border-radius:13px;padding:10px 14px}
@@ -971,6 +987,36 @@
   </div>
 </div>
 
+<!-- ============ LEVEL-UP MODAL ============ -->
+<div class="modal" id="levelupModal">
+  <div class="combat-card" style="max-width:340px">
+    <div class="lu-header">
+      <div class="lu-title" id="luTitle">Level Up!</div>
+      <div class="lu-sub" id="luSub">Tillykke, helt!</div>
+    </div>
+    <div class="lu-suggest" id="luSuggest">
+      <div class="lu-suggest-text">
+        <div class="lu-suggest-label">Anbefalet HP-stigning</div>
+        <div class="lu-suggest-val" id="luSuggestVal">+0</div>
+        <div class="lu-suggest-sub" id="luSuggestSub"></div>
+      </div>
+      <button class="lu-use-btn" onclick="applyLevelUp(true)">Brug dette</button>
+    </div>
+    <div class="lu-divider">— eller skriv dit eget —</div>
+    <div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px">
+      <div class="numpad-display empty" id="luDisplay">0</div>
+    </div>
+    <div class="numpad-grid">
+      <button class="npk" onclick="luKey('7')">7</button><button class="npk" onclick="luKey('8')">8</button><button class="npk" onclick="luKey('9')">9</button>
+      <button class="npk" onclick="luKey('4')">4</button><button class="npk" onclick="luKey('5')">5</button><button class="npk" onclick="luKey('6')">6</button>
+      <button class="npk" onclick="luKey('1')">1</button><button class="npk" onclick="luKey('2')">2</button><button class="npk" onclick="luKey('3')">3</button>
+      <button class="npk" onclick="luKey('0')" style="grid-column:span 2">0</button><button class="npk" onclick="luBack()">⌫</button>
+    </div>
+    <button class="lu-confirm" onclick="applyLevelUp(false)">Bekræft eget tal</button>
+    <button class="btn-ghost" style="width:100%;margin-top:8px" onclick="closeLevelUp()">Annuller</button>
+  </div>
+</div>
+
 <!-- hidden file picker for import -->
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
@@ -1294,6 +1340,49 @@ const IMPORT_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const DICE_BTN_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg>`;
 const CHEV_ICON=`<svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>`;
 
+/* ---------------- level up ---------------- */
+let _luCharId=null, _luSuggested=0, _luVal='';
+
+function openLevelUp(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  _luCharId=id; _luVal='';
+  const newLevel=(c.level||1)+1;
+  const hd=CLASS_HIT_DIE[c.klasse]||8;
+  const conMod=mod((c.stats&&c.stats.con)||10);
+  const avg=Math.floor(hd/2)+1;
+  _luSuggested=Math.max(1, avg+conMod);
+  document.getElementById('luTitle').textContent=`Level ${newLevel}!`;
+  document.getElementById('luSub').textContent=`${c.name} stiger fra level ${c.level||1} til ${newLevel}`;
+  document.getElementById('luSuggestVal').textContent='+'+_luSuggested;
+  document.getElementById('luSuggestSub').textContent=`d${hd} avg (${avg}) + CON ${modStr((c.stats&&c.stats.con)||10)}`;
+  const disp=document.getElementById('luDisplay');
+  disp.textContent='0'; disp.classList.add('empty');
+  document.getElementById('levelupModal').classList.add('open');
+}
+function closeLevelUp(){ document.getElementById('levelupModal').classList.remove('open'); }
+function luKey(k){
+  if(_luVal.length>=3) return;
+  _luVal=(_luVal+k).replace(/^0+/,'')||'0';
+  const disp=document.getElementById('luDisplay');
+  disp.textContent=_luVal||'0'; disp.classList.toggle('empty',!_luVal);
+}
+function luBack(){
+  _luVal=_luVal.slice(0,-1);
+  const disp=document.getElementById('luDisplay');
+  disp.textContent=_luVal||'0'; disp.classList.toggle('empty',!_luVal);
+}
+async function applyLevelUp(useSuggested){
+  const c=chars.find(x=>x.id===_luCharId); if(!c) return;
+  const hpGain=useSuggested ? _luSuggested : Math.max(1,parseInt(_luVal)||1);
+  closeLevelUp();
+  c.level=(c.level||1)+1;
+  c.maxHp=(c.maxHp||0)+hpGain;
+  c.hp=Math.min((c.hp||0)+hpGain, c.maxHp);
+  await Store.save(chars);
+  buzz(25);
+  renderDetail(_luCharId);
+}
+
 /* ---------------- backup ---------------- */
 function exportBackup(){
   const data = { version:1, exported: new Date().toISOString(), chars, craftedWeapons };
@@ -1573,6 +1662,7 @@ function renderDetail(id){
     <div class="add-card" style="margin-top:11px" onclick="newAttack()"><span class="plus">+</span> Add attack</div>
     <div class="sheet-actions">
       <button class="btn-ghost" style="flex:1" onclick="editChar('${c.id}')">Edit hero</button>
+      <button class="btn-ghost" style="flex:1;border-color:rgba(201,162,75,.5);color:var(--gold)" onclick="openLevelUp('${c.id}')">⬆ Level Up</button>
       <button class="btn-ghost danger" onclick="deleteChar('${c.id}')">Delete</button>
     </div>`;
   renderAttacks(c);
