@@ -425,6 +425,34 @@
   .ds-result.bad{border-color:var(--crimson);color:#f2c9c7}
   .ds-result.epic{border-color:var(--gold);color:var(--gold-hi)}
   @keyframes dsfade{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
+
+  /* ---------- Spell Slots ---------- */
+  .slots-section{margin-top:18px}
+  .slot-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;
+    background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:9px 13px}
+  .slot-lvl{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.04em;
+    color:var(--muted);width:34px;flex-shrink:0}
+  .slot-pips{display:flex;gap:6px;flex-wrap:wrap}
+  .slot-pip{width:21px;height:21px;border-radius:50%;border:2px solid var(--gold);
+    background:rgba(201,162,75,.25);cursor:pointer;transition:background .1s,border-color .1s;flex-shrink:0}
+  .slot-pip.spent{background:transparent;border-color:var(--edge)}
+  .slot-pip:active{transform:scale(.88)}
+  .slot-note{margin-top:4px;font-family:'Space Mono',monospace;font-size:.58rem;
+    color:var(--muted);text-align:center;letter-spacing:.06em}
+
+  /* ---------- Conditions ---------- */
+  .cond-section{margin-top:18px}
+  .cond-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .cond-chip{border:1px solid var(--edge);background:var(--surface);color:var(--muted);
+    border-radius:8px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:.63rem;
+    cursor:pointer;transition:border-color .12s,background .12s,color .12s;letter-spacing:.02em}
+  .cond-chip.on{border-color:var(--crimson);background:rgba(183,64,59,.15);color:#f2c9c7}
+  .cond-chip:active{transform:scale(.94)}
+  .cond-detail{margin-top:9px;background:var(--bg2);border:1px solid rgba(183,64,59,.35);
+    border-radius:11px;padding:10px 12px;font-size:.78rem;color:var(--bone);line-height:1.6}
+  .cond-detail .cd-entry{margin-bottom:5px}
+  .cond-detail .cd-entry:last-child{margin-bottom:0}
+  .cond-detail b{color:#f2c9c7;font-family:'Cinzel',serif;font-size:.74rem;letter-spacing:.04em;font-weight:700}
 </style>
 </head>
 <body>
@@ -893,6 +921,8 @@ function renderDetail(id){
   const sb = ABILITIES.map(a=>`
     <div class="sb"><div class="sb-en">${a[2]}</div><div class="sb-val">${c.stats[a[0]]||'–'}</div><div class="sb-mod">${modStr(c.stats[a[0]])}</div></div>`).join('');
   const hpac = renderHpAc(c);
+  const slots = renderSpellSlots(c);
+  const conds = renderConditions(c);
   document.getElementById('detailBody').innerHTML=`
     <div class="sheet-crest">
       <div class="sheet-sigil">${icon(c.klasse)}</div>
@@ -901,6 +931,8 @@ function renderDetail(id){
     </div>
     <div class="statblock">${sb}</div>
     ${hpac}
+    ${slots}
+    ${conds}
     <div class="section-label" style="margin-top:26px">Attacks &amp; rolls</div>
     <div class="atk-list" id="atkList"></div>
     <div class="add-card" style="margin-top:11px" onclick="newAttack()"><span class="plus">+</span> Add attack</div>
@@ -1047,10 +1079,11 @@ async function bumpHP(id, direction){
 
 async function restHP(id){
   const c=chars.find(x=>x.id===id); if(!c||c.maxHp==null) return;
-  // dying → revive at 1 HP; alive → long rest → full HP
+  // dying → revive at 1 HP; alive → long rest → full HP + recover all slots
   c.hp = (c.hp||0)<=0 ? 1 : c.maxHp;
   c.deathSaves={s:0,f:0};
   c.tempHp=0;
+  c.slotsUsed={};
   await Store.save(chars);
   renderDetail(id);
 }
@@ -1122,6 +1155,108 @@ function updateHpSuggest(){
 function applyHpSuggest(){
   const v=suggestedHp(); if(v!=null) document.getElementById('f-maxhp').value=v;
   document.getElementById('hpSuggest').style.display='none';
+}
+
+/* ================= SPELL SLOTS ================= */
+// Full-caster slot table [charLevel-1][slotLevel-1], 0 = no slots at that level
+const SLOT_TABLE=[
+  [2,0,0,0,0,0,0,0,0],[3,0,0,0,0,0,0,0,0],[4,2,0,0,0,0,0,0,0],[4,3,0,0,0,0,0,0,0],
+  [4,3,2,0,0,0,0,0,0],[4,3,3,0,0,0,0,0,0],[4,3,3,1,0,0,0,0,0],[4,3,3,2,0,0,0,0,0],
+  [4,3,3,3,1,0,0,0,0],[4,3,3,3,2,0,0,0,0],[4,3,3,3,2,1,0,0,0],[4,3,3,3,2,1,0,0,0],
+  [4,3,3,3,2,1,1,0,0],[4,3,3,3,2,1,1,0,0],[4,3,3,3,2,1,1,1,0],[4,3,3,3,2,1,1,1,0],
+  [4,3,3,3,2,1,1,1,1],[4,3,3,3,3,1,1,1,1],[4,3,3,3,3,2,1,1,1],[4,3,3,3,3,2,2,1,1]
+];
+// Warlock pact magic [charLevel-1] → [numSlots, slotLevel]
+const WARLOCK_SLOTS=[
+  [1,1],[2,1],[2,2],[2,2],[2,3],[2,3],[2,4],[2,4],[2,5],[2,5],
+  [3,5],[3,5],[3,5],[3,5],[3,5],[3,5],[4,5],[4,5],[4,5],[4,5]
+];
+// 'full' | 'half' | 'warlock' | undefined = no spellcasting
+const CASTER_TYPE={Bard:'full',Cleric:'full',Druid:'full',Sorcerer:'full',Wizard:'full',
+  Paladin:'half',Ranger:'half',Warlock:'warlock'};
+const SLOT_ORD=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th'];
+
+function getSlots(c){
+  const ct=CASTER_TYPE[c.klasse]; if(!ct) return null;
+  const L=Math.max(1,Math.min(20,c.level||1));
+  if(ct==='warlock'){
+    const [n,slv]=WARLOCK_SLOTS[L-1];
+    const arr=new Array(9).fill(0); arr[slv-1]=n; return {arr,pact:slv};
+  }
+  const effL=ct==='half'?Math.floor(L/2):L;
+  if(effL<1) return null;
+  return {arr:SLOT_TABLE[effL-1],pact:null};
+}
+
+function renderSpellSlots(c){
+  const info=getSlots(c); if(!info) return '';
+  const {arr,pact}=info;
+  const used=c.slotsUsed||{};
+  let rows='';
+  arr.forEach((max,i)=>{
+    if(!max) return;
+    const lvl=i+1;
+    const u=Math.min(max,used[lvl]||0);
+    const label=pact?`Pact (${SLOT_ORD[pact-1]})`:SLOT_ORD[i];
+    const pips=[...Array(max)].map((_,j)=>{
+      const avail=j<(max-u);
+      return `<div class="slot-pip${avail?'':' spent'}" onclick="adjustSlot('${c.id}',${lvl},${avail?1:-1})"></div>`;
+    }).join('');
+    rows+=`<div class="slot-row"><span class="slot-lvl">${label}</span><div class="slot-pips">${pips}</div></div>`;
+  });
+  const note=pact?`<div class="slot-note">PACT MAGIC · recovers on short rest</div>`:'';
+  return `<div class="slots-section"><div class="section-label" style="margin-top:0">Spell slots</div>${rows}${note}</div>`;
+}
+
+async function adjustSlot(id,level,dir){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const info=getSlots(c); if(!info) return;
+  const max=info.arr[level-1]; if(!max) return;
+  if(!c.slotsUsed) c.slotsUsed={};
+  const u=c.slotsUsed[level]||0;
+  c.slotsUsed[level]=Math.max(0,Math.min(max,u+dir));
+  await Store.save(chars); renderDetail(id);
+}
+
+/* ================= CONDITIONS ================= */
+const CONDITIONS={
+  blinded:      {name:'Blinded',      effect:'Can\'t see. Attacks against you have advantage; your attacks have disadvantage.'},
+  charmed:      {name:'Charmed',      effect:'Can\'t attack the charmer. Charmer has advantage on social checks against you.'},
+  deafened:     {name:'Deafened',     effect:'Can\'t hear. Auto-fails any check requiring hearing.'},
+  frightened:   {name:'Frightened',   effect:'Disadvantage on checks & attacks while source is in sight. Can\'t move closer to source.'},
+  grappled:     {name:'Grappled',     effect:'Speed becomes 0. Ends if grappler is incapacitated or you are moved away.'},
+  incapacitated:{name:'Incapacitated',effect:'Can\'t take actions or reactions.'},
+  invisible:    {name:'Invisible',    effect:'Can\'t be seen without magic. Your attacks have advantage; attacks against you have disadvantage.'},
+  paralyzed:    {name:'Paralyzed',    effect:'Incapacitated. Fails STR & DEX saves. Attacks have advantage; hits within 5 ft are crits.'},
+  petrified:    {name:'Petrified',    effect:'Turned to stone. Incapacitated, resistant to all damage, unaware of surroundings.'},
+  poisoned:     {name:'Poisoned',     effect:'Disadvantage on attack rolls and ability checks.'},
+  prone:        {name:'Prone',        effect:'Attacks within 5 ft have advantage against you; beyond 5 ft have disadvantage. Your attacks have disadvantage.'},
+  restrained:   {name:'Restrained',   effect:'Speed 0. Your attacks have disadvantage; attacks against you have advantage. DEX saves at disadvantage.'},
+  stunned:      {name:'Stunned',      effect:'Incapacitated. Fails STR & DEX saves. Attacks against you have advantage.'},
+  unconscious:  {name:'Unconscious',  effect:'Incapacitated, drops everything, falls prone. Hits within 5 ft are crits.'},
+};
+
+function renderConditions(c){
+  const active=c.conditions||[];
+  const chips=Object.entries(CONDITIONS).map(([k,v])=>
+    `<button class="cond-chip${active.includes(k)?' on':''}" onclick="toggleCondition('${c.id}','${k}')">${v.name}</button>`
+  ).join('');
+  const details=active.filter(k=>CONDITIONS[k]).map(k=>
+    `<div class="cd-entry"><b>${CONDITIONS[k].name}</b> — ${CONDITIONS[k].effect}</div>`
+  ).join('');
+  return `<div class="cond-section">
+    <div class="section-label" style="margin-top:0">Conditions</div>
+    <div class="cond-grid">${chips}</div>
+    ${details?`<div class="cond-detail">${details}</div>`:''}
+  </div>`;
+}
+
+async function toggleCondition(id,key){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  if(!c.conditions) c.conditions=[];
+  const idx=c.conditions.indexOf(key);
+  if(idx>=0) c.conditions.splice(idx,1); else c.conditions.push(key);
+  await Store.save(chars); renderDetail(id);
 }
 
 /* ================= DICE ENGINE (faceted physics) ================= */
