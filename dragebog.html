@@ -1415,8 +1415,35 @@ async function handleImport(e){
     'Gendan','📦'
   );
   if(!ok) return;
-  chars.length=0; data.chars.forEach(c=>chars.push(c));
-  if(Array.isArray(data.craftedWeapons)){ craftedWeapons.length=0; data.craftedWeapons.forEach(w=>craftedWeapons.push(w)); mergeCraftedIntoWeapons(); await Store.saveCraft(craftedWeapons); }
+  const clampStr = (v,max=100) => String(v||'').slice(0,max);
+  const clampInt = (v,min=0,max=999) => Math.min(max,Math.max(min,parseInt(v)||0));
+  const sanitizeChar = c => ({
+    id: clampStr(c.id,40)||('c'+Date.now().toString(36)),
+    name: clampStr(c.name), race: RACES.includes(c.race)?c.race:'',
+    klasse: CLASSES.includes(c.klasse)?c.klasse:'', level: clampInt(c.level,1,20),
+    height: clampStr(c.height,40), ancestry: clampStr(c.ancestry,40),
+    stats: Object.fromEntries(ABILITIES.map(a=>[a[0],clampInt((c.stats||{})[a[0]],1,30)])),
+    maxHp: clampInt(c.maxHp,1,999), hp: clampInt(c.hp,0,999), ac: clampInt(c.ac,0,30),
+    tempHp: clampInt(c.tempHp,0,999),
+    deathSaves: {s:clampInt((c.deathSaves||{}).s,0,3), f:clampInt((c.deathSaves||{}).f,0,3)},
+    slotsUsed: (c.slotsUsed&&typeof c.slotsUsed==='object')?c.slotsUsed:{},
+    conditions: (Array.isArray(c.conditions)?c.conditions:[]).filter(x=>typeof x==='string').map(x=>clampStr(x,40)),
+    skillProfs: (Array.isArray(c.skillProfs)?c.skillProfs:[]).filter(x=>typeof x==='string').map(x=>clampStr(x,40)),
+    attacks: (Array.isArray(c.attacks)?c.attacks:[]).map(a=>({
+      id: clampStr(a.id,40), name: clampStr(a.name), weapon: clampStr(a.weapon),
+      ability: clampStr(a.ability,10), type: clampStr(a.type,30), prof: !!a.prof,
+      combos: (Array.isArray(a.combos)?a.combos:[]).map(co=>({key:clampStr(co.key,40),on:!!co.on,undead:!!co.undead}))
+    }))
+  });
+  const sanitizeCW = w => ({
+    id: clampStr(w.id,40), name: clampStr(w.name), cat:'Crafted', custom:true,
+    n: clampInt(w.n,1,20), s: [4,6,8,10,12].includes(w.s)?w.s:6,
+    type: clampStr(w.type,30), bonus: clampInt(w.bonus,0,5),
+    props: (Array.isArray(w.props)?w.props:[]).filter(x=>typeof x==='string').map(x=>clampStr(x,40)),
+    lore: clampStr(w.lore,300)
+  });
+  chars.length=0; data.chars.forEach(c=>chars.push(sanitizeChar(c)));
+  if(Array.isArray(data.craftedWeapons)){ craftedWeapons.length=0; data.craftedWeapons.forEach(w=>craftedWeapons.push(sanitizeCW(w))); mergeCraftedIntoWeapons(); await Store.saveCraft(craftedWeapons); }
   await Store.save(chars);
   buzz(25); renderHome();
 }
@@ -1449,7 +1476,7 @@ function renderHome(){
       <div class="sigil">${icon(c.klasse)}</div>
       <div class="c-main">
         <div class="c-name">${esc(c.name)}</div>
-        <div class="c-sub">${[c.level?('Lvl '+c.level):'',c.race,c.klasse,c.height].filter(Boolean).join(' · ')||'Unknown wanderer'}</div>
+        <div class="c-sub">${[c.level?('Lvl '+c.level):'',esc(c.race),esc(c.klasse),esc(c.height)].filter(Boolean).join(' · ')||'Unknown wanderer'}</div>
         <div class="c-stats">${chips}</div>
       </div>
       <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
@@ -1683,8 +1710,8 @@ function renderAttacks(c){
   }
   list.innerHTML=c.attacks.map(a=>{
     const th=effToHit(a,c);
-    const meta=[`${th>=0?'+':''}${th} to hit`, dmgSummaryText(a,c), a.type].filter(Boolean).join(' · ');
-    const combos=(a.combos||[]).map(co=>`<span class="atk-combo">${(COMBOS[co.key]||{}).name||co.key}</span>`).join('');
+    const meta=[`${th>=0?'+':''}${th} to hit`, dmgSummaryText(a,c), esc(a.type)].filter(Boolean).join(' · ');
+    const combos=(a.combos||[]).map(co=>`<span class="atk-combo">${esc((COMBOS[co.key]||{}).name||co.key)}</span>`).join('');
     return `<div class="atk">
       <div class="atk-main" onclick="startAttack('${c.id}','${a.id}')">
         <div class="atk-name">${esc(a.name)}</div>
@@ -2567,10 +2594,10 @@ function renderCraftList(){
   document.getElementById('craftLabel').style.display=craftedWeapons.length?'block':'none';
   if(!craftedWeapons.length){ box.innerHTML='<div class="empty" style="padding:20px 0 10px"><div class="e-title">No forged weapons yet</div>Craft a custom weapon and assign it to your heroes.</div>'; return; }
   box.innerHTML=craftedWeapons.map(cw=>{
-    const props=(cw.props||[]).map(p=>`<span class="craft-prop">${p}</span>`).join('');
+    const props=(cw.props||[]).map(p=>`<span class="craft-prop">${esc(p)}</span>`).join('');
     return `<div class="craft-card">
       <div class="craft-name">${esc(cw.name)}${cw.bonus?` <span style="color:var(--gold-hi);font-size:.8rem">+${cw.bonus}</span>`:''}</div>
-      <div class="craft-stats">${cw.n}d${cw.s}${cw.bonus?'+'+cw.bonus:''} ${cw.type||''}</div>
+      <div class="craft-stats">${cw.n}d${cw.s}${cw.bonus?'+'+cw.bonus:''} ${esc(cw.type||'')}</div>
       ${props?`<div class="craft-props">${props}</div>`:''}
       ${cw.lore?`<div class="craft-lore">${esc(cw.lore)}</div>`:''}
       <div class="craft-btns">
@@ -2951,7 +2978,7 @@ function renderWeaponInfo(){
   const w=WEAPONS.find(x=>x.name===aEdit.weapon);
   if(!w){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
-  const tags=(w.props||[]).map(p=>`<span class="wtag">${(p==='Versatile'&&w.vers)?`Versatile (${w.vers[0]}d${w.vers[1]})`:p}</span>`).join('')
+  const tags=(w.props||[]).map(p=>`<span class="wtag">${(p==='Versatile'&&w.vers)?`Versatile (${w.vers[0]}d${w.vers[1]})`:esc(p)}</span>`).join('')
     || '<span class="wtag dim">No special properties</span>';
   let hands='';
   if(w.vers){
