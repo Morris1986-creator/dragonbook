@@ -914,6 +914,22 @@
 
 </div>
 
+<!-- ============ CONFIRM MODAL ============ -->
+<div class="modal" id="confirmModal">
+  <div class="combat-card" style="max-width:340px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:10px" id="confirmIcon">⚠️</div>
+    <div style="font-family:'Cinzel',serif;font-weight:800;font-size:1.1rem;letter-spacing:.06em;color:var(--bone);margin-bottom:8px" id="confirmTitle">Are you sure?</div>
+    <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:22px" id="confirmMsg"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="confirmResolve(false)" style="flex:1;border:1px solid var(--edge);background:var(--surface);color:var(--muted);
+        border-radius:13px;padding:13px;font-family:'Cinzel',serif;font-weight:700;font-size:.88rem;cursor:pointer" id="confirmCancel">Cancel</button>
+      <button onclick="confirmResolve(true)" style="flex:1;border:0;border-radius:13px;padding:13px;
+        font-family:'Cinzel',serif;font-weight:700;font-size:.88rem;cursor:pointer;
+        background:linear-gradient(180deg,#d95050,var(--crimson));color:#fff;letter-spacing:.04em" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ CRAFT ASSIGN MODAL ============ -->
 <div class="modal" id="craftAssignModal">
   <div class="combat-card" style="max-width:380px">
@@ -1018,6 +1034,21 @@ const D6PTS=[[16,16],[84,16],[84,84],[16,84]];
 function miniDie(){ return facetSVG(6, colorFor(6), 'mn', 'rsm', null, false); }
 
 /* ---- cheat / loaded dice ---- */
+/* ---- in-app confirm dialog ---- */
+let _confirmResolve=null;
+function showConfirm(title, msg, okLabel='Delete', icon='🗑️'){
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmOk').textContent=okLabel;
+  document.getElementById('confirmIcon').textContent=icon;
+  document.getElementById('confirmModal').classList.add('open');
+  return new Promise(res=>{ _confirmResolve=res; });
+}
+function confirmResolve(val){
+  document.getElementById('confirmModal').classList.remove('open');
+  if(_confirmResolve){ _confirmResolve(val); _confirmResolve=null; }
+}
+
 let cheatLevel=0; // 0, 25, 50, 75
 let _crestTaps=0, _crestTimer=null;
 const CHEAT_EXP={0:1, 25:0.55, 50:0.28, 75:0.10};
@@ -2282,11 +2313,12 @@ async function saveCraftWeapon(){
   go('craft');
 }
 async function confirmDeleteCraft(id){
-  if(!confirm('Delete this weapon? It will be removed from all characters.')) return;
+  const cw=craftedWeapons.find(x=>x.id===id); if(!cw) return;
+  const ok=await showConfirm('Delete weapon?',`"${cw.name}" will be removed from all characters. This can't be undone.`);
+  if(!ok) return;
   craftedWeapons=craftedWeapons.filter(x=>x.id!==id);
-  /* remove attacks using this weapon from all chars */
-  const wName=(WEAPONS.find(w=>w.id===id)||{}).name;
-  if(wName) chars.forEach(c=>{ c.attacks=(c.attacks||[]).filter(a=>a.weapon!==wName); });
+  const wName=cw.name;
+  chars.forEach(c=>{ c.attacks=(c.attacks||[]).filter(a=>a.weapon!==wName); });
   await Store.saveCraft(craftedWeapons);
   await Store.save(chars);
   refreshWeaponSelect();
