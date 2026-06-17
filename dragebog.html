@@ -96,6 +96,29 @@
   }
   @keyframes splashLoad{from{width:0%}to{width:100%}}
 
+  /* ---------- cheat indicator ---------- */
+  .cheat-active{
+    position:fixed;bottom:calc(env(safe-area-inset-bottom) + 10px);right:14px;z-index:90;
+    background:rgba(183,64,59,.22);border:1px solid rgba(183,64,59,.6);
+    border-radius:8px;padding:4px 9px;font-family:'Space Mono',monospace;
+    font-size:.58rem;color:#f2c9c7;letter-spacing:.06em;pointer-events:none;
+    animation:betapulse 2s ease-in-out infinite;
+  }
+  .cheat-btn{
+    width:100%;border-radius:12px;padding:13px 16px;cursor:pointer;text-align:left;
+    display:flex;align-items:center;gap:12px;
+    border:1px solid var(--edge);background:var(--surface);color:var(--bone);
+    font-family:'Sora',sans-serif;font-size:.92rem;font-weight:600;transition:.12s;
+  }
+  .cheat-btn:active{transform:scale(.98)}
+  .cheat-btn.on{border-color:var(--gold);background:rgba(201,162,75,.1);}
+  .cheat-btn .cheat-icon{font-size:1.2rem;flex-shrink:0;width:28px;text-align:center}
+  .cheat-btn .cheat-label{flex:1}
+  .cheat-btn .cheat-sub{font-size:.68rem;color:var(--muted);font-weight:400;display:block;margin-top:2px;font-family:'Space Mono',monospace}
+  .cheat-btn.on .cheat-sub{color:var(--gold-hi)}
+  .cheat-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--edge);flex-shrink:0}
+  .cheat-btn.on .cheat-check{background:var(--gold);border-color:var(--gold)}
+
   /* ---------- beta banner ---------- */
   .beta-banner{
     display:flex;align-items:center;justify-content:center;gap:8px;
@@ -615,7 +638,7 @@
       <span class="creator">by Morris</span>
     </div>
     <div class="crest-row">
-      <div class="crest" id="crestSlot"></div>
+      <div class="crest" id="crestSlot" onclick="crestTap()" style="cursor:pointer"></div>
       <div class="wordmark">DRAGON<b>BOOK</b></div>
       <div class="tagline">D&amp;D · Dice on the Run</div>
     </div>
@@ -785,6 +808,19 @@
 
 </div>
 
+<!-- ============ CHEAT MODAL ============ -->
+<div class="modal" id="cheatModal">
+  <div class="combat-card" style="max-width:360px">
+    <button class="combat-close" onclick="closeCheat()" aria-label="Close">×</button>
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-family:'Cinzel',serif;font-weight:800;font-size:1.3rem;letter-spacing:.1em;color:var(--gold-hi)">⚠ Loaded Dice</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:5px;font-family:'Space Mono',monospace">Skew rolls toward higher numbers.<br>Applies to all dice rolls in the app.</div>
+    </div>
+    <div id="cheatOptions" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div style="margin-top:16px;text-align:center;font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted)">🤫 For your eyes only</div>
+  </div>
+</div>
+
 <!-- ============ COMBAT MODAL ============ -->
 <div class="modal" id="combatModal">
   <div class="combat-card">
@@ -846,7 +882,53 @@ const CREST=`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-w
 const D6PTS=[[16,16],[84,16],[84,84],[16,84]];
 function miniDie(){ return facetSVG(6, colorFor(6), 'mn', 'rsm', null, false); }
 
-const r = n => Math.floor(Math.random()*n)+1;
+/* ---- cheat / loaded dice ---- */
+let cheatLevel=0; // 0, 25, 50, 75
+let _crestTaps=0, _crestTimer=null;
+const CHEAT_EXP={0:1, 25:0.55, 50:0.28, 75:0.10};
+const CHEAT_OPTIONS=[
+  {level:0,  icon:'🎲', label:'Fair dice',    sub:'Normal probability — no cheating'},
+  {level:25, icon:'⚡', label:'+25% boost',   sub:'Slightly loaded toward high rolls'},
+  {level:50, icon:'🔥', label:'+50% boost',   sub:'Noticeably skewed — use with care'},
+  {level:75, icon:'💀', label:'+75% boost',   sub:'Almost always rolls high'},
+];
+function r(n){
+  const raw=Math.random();
+  const exp=CHEAT_EXP[cheatLevel]??1;
+  return Math.max(1,Math.min(n,Math.ceil(Math.pow(raw,exp)*n)));
+}
+function crestTap(){
+  if(_crestTimer) clearTimeout(_crestTimer);
+  _crestTaps++;
+  if(_crestTaps>=5){ _crestTaps=0; openCheatMenu(); return; }
+  _crestTimer=setTimeout(()=>{ _crestTaps=0; },1400);
+}
+function openCheatMenu(){
+  buzz(30);
+  const box=document.getElementById('cheatOptions');
+  box.innerHTML=CHEAT_OPTIONS.map(o=>`
+    <button class="cheat-btn${cheatLevel===o.level?' on':''}" onclick="setCheat(${o.level})">
+      <span class="cheat-icon">${o.icon}</span>
+      <span class="cheat-label">${o.label}<span class="cheat-sub">${o.sub}</span></span>
+      <span class="cheat-check"></span>
+    </button>`).join('');
+  document.getElementById('cheatModal').classList.add('open');
+}
+function setCheat(level){
+  cheatLevel=level;
+  updateCheatIndicator();
+  openCheatMenu(); // re-render to update selection
+}
+function closeCheat(){
+  document.getElementById('cheatModal').classList.remove('open');
+}
+function updateCheatIndicator(){
+  let ind=document.getElementById('cheatIndicator');
+  if(cheatLevel===0){ if(ind) ind.remove(); return; }
+  if(!ind){ ind=document.createElement('div'); ind.id='cheatIndicator'; ind.className='cheat-active'; document.body.appendChild(ind); }
+  const o=CHEAT_OPTIONS.find(x=>x.level===cheatLevel);
+  ind.textContent=`${o.icon} Loaded +${cheatLevel}%`;
+}
 const mod = v => Math.floor((Number(v||10)-10)/2);
 const modStr = v => { const m=mod(v); return (m>=0?'+':'')+m; };
 /* ----- 5e auto-calc: proficiency bonus, ability choice, effective bonuses ----- */
