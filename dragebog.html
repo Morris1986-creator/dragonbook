@@ -418,6 +418,13 @@
   .ds-status{text-align:center;margin-top:9px;font-family:'Cinzel',serif;font-weight:700;
     font-size:.88rem;letter-spacing:.1em;padding:6px}
   .ds-status.stable{color:var(--emerald)} .ds-status.dead{color:var(--crimson)}
+  .ds-result{text-align:center;font-family:'Space Mono',monospace;font-size:.76rem;margin-top:8px;
+    padding:7px 10px;border-radius:9px;border:1px solid var(--edge);background:var(--bg2);color:var(--bone);
+    animation:dsfade 3.5s ease forwards}
+  .ds-result.good{border-color:var(--emerald);color:#cfeede}
+  .ds-result.bad{border-color:var(--crimson);color:#f2c9c7}
+  .ds-result.epic{border-color:var(--gold);color:var(--gold-hi)}
+  @keyframes dsfade{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
 </style>
 </head>
 <body>
@@ -961,7 +968,7 @@ function renderHpAc(c){
       </div>
       <div class="temp-row">
         ${tempChip}
-        <button class="temp-btn" onclick="addTempHp('${c.id}')">⚡ Temp HP</button>
+        <button class="temp-btn" onclick="addTempHp('${c.id}')">${tempHp>0?'⚡ Update temp':'⚡ Temp HP'}</button>
       </div>`;
 
     const deathHtml = dying ? renderDeathSaves(c) : '';
@@ -1017,6 +1024,7 @@ function renderDeathSaves(c){
       <div class="ds-row"><span class="ds-label fail">Failures</span><div class="ds-pips">${failPips}</div></div>
       ${statusHtml}
       ${rollBtn}
+      <div id="dsResult"></div>
     </div>`;
 }
 
@@ -1075,23 +1083,24 @@ async function rollDeathSave(id){
   if(!c.deathSaves) c.deathSaves={s:0,f:0};
   const roll=Math.floor(Math.random()*20)+1;
   buzz(14);
-  let msg='';
+  let msg='', cls='';
   if(roll===20){
     c.hp=1; c.deathSaves={s:0,f:0};
-    msg=`Nat 20! Back on your feet with 1 HP!`;
+    msg=`Nat 20! Back on your feet with 1 HP!`; cls='epic';
   } else if(roll===1){
     c.deathSaves.f=Math.min(3,c.deathSaves.f+2);
-    msg=`Nat 1 — two failures! (rolled 1)`;
+    msg=`Nat 1 — two failures!`; cls='bad';
   } else if(roll>=10){
     c.deathSaves.s=Math.min(3,c.deathSaves.s+1);
-    msg=`Success (rolled ${roll})`;
+    msg=`Success — rolled ${roll}`; cls='good';
   } else {
     c.deathSaves.f=Math.min(3,c.deathSaves.f+1);
-    msg=`Failure (rolled ${roll})`;
+    msg=`Failure — rolled ${roll}`; cls='bad';
   }
   await Store.save(chars);
   renderDetail(id);
-  setTimeout(()=>alert(msg),80); // brief delay so re-render settles first
+  const el=document.getElementById('dsResult');
+  if(el){ el.textContent=msg; el.className='ds-result '+cls; }
 }
 
 /* ---- HP auto-suggest in editor ---- */
