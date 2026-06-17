@@ -971,6 +971,9 @@
   </div>
 </div>
 
+<!-- hidden file picker for import -->
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
 <!-- ============ CONFIRM MODAL ============ -->
 <div class="modal" id="confirmModal">
   <div class="combat-card" style="max-width:340px;text-align:center">
@@ -1286,8 +1289,45 @@ async function randomChar(){
 }
 
 const CRAFT_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+const EXPORT_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+const IMPORT_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
 const DICE_BTN_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg>`;
 const CHEV_ICON=`<svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>`;
+
+/* ---------------- backup ---------------- */
+function exportBackup(){
+  const data = { version:1, exported: new Date().toISOString(), chars, craftedWeapons };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `dragonbook-backup-${date}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  buzz(18);
+}
+
+function triggerImport(){
+  document.getElementById('importFile').value='';
+  document.getElementById('importFile').click();
+}
+
+async function handleImport(e){
+  const file = e.target.files[0]; if(!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch(_){ await showConfirm('Fejl','Filen kunne ikke læses — er det en gyldig DragonBook-backup?','OK','❌'); return; }
+  if(!Array.isArray(data.chars)){ await showConfirm('Fejl','Ikke en gyldig DragonBook-backup.','OK','❌'); return; }
+  const ok = await showConfirm(
+    'Gendan backup',
+    `Dette erstatter ${chars.length} eksisterende ${chars.length===1?'karakter':'karakterer'} med ${data.chars.length} fra filen. Fortsæt?`,
+    'Gendan','📦'
+  );
+  if(!ok) return;
+  chars.length=0; data.chars.forEach(c=>chars.push(c));
+  if(Array.isArray(data.craftedWeapons)){ craftedWeapons.length=0; data.craftedWeapons.forEach(w=>craftedWeapons.push(w)); mergeCraftedIntoWeapons(); await Store.saveCraft(craftedWeapons); }
+  await Store.save(chars);
+  buzz(25); renderHome();
+}
 
 function renderHome(){
   const roster=document.getElementById('roster');
@@ -1302,7 +1342,13 @@ function renderHome(){
       <div class="add-card random-card" onclick="randomChar()" style="margin-top:10px">
         <span class="plus" style="font-size:1.3rem">🎲</span> Roll a random character
       </div>`;
-    document.getElementById('homeTools').innerHTML='';
+    document.getElementById('homeTools').innerHTML=`
+      <div class="tools-divider"><span>Backup</span></div>
+      <button class="studio-btn" onclick="triggerImport()">
+        <span class="si">${IMPORT_ICON}</span>
+        <span class="grow">Gendan fra backup-fil</span>
+        ${CHEV_ICON}
+      </button>`;
     return;
   }
   roster.innerHTML = chars.map(c=>{
@@ -1332,6 +1378,17 @@ function renderHome(){
     <button class="studio-btn" onclick="openDice()">
       <span class="si">${DICE_BTN_ICON}</span>
       <span class="grow">Dice appearance</span>
+      ${CHEV_ICON}
+    </button>
+    <div class="tools-divider" style="margin-top:14px"><span>Backup</span></div>
+    <button class="studio-btn" onclick="exportBackup()">
+      <span class="si">${EXPORT_ICON}</span>
+      <span class="grow">Gem backup til fil</span>
+      ${CHEV_ICON}
+    </button>
+    <button class="studio-btn" onclick="triggerImport()">
+      <span class="si">${IMPORT_ICON}</span>
+      <span class="grow">Gendan fra backup-fil</span>
       ${CHEV_ICON}
     </button>`;
 }
