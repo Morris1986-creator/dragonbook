@@ -980,9 +980,12 @@
       <button class="npk wide" onclick="npKey('0')">0</button>
       <button class="npk backspace" onclick="npBack()">⌫</button>
     </div>
-    <div class="numpad-actions">
+    <div class="numpad-actions" id="npHpActions">
       <button class="np-dmg" onclick="npApply(-1)">− Damage</button>
       <button class="np-heal" onclick="npApply(1)">+ Heal</button>
+    </div>
+    <div id="npTempActions" style="display:none;margin-top:10px">
+      <button class="np-heal" style="width:100%" onclick="npApplyTemp()">⚡ Sæt Temp HP</button>
     </div>
   </div>
 </div>
@@ -1793,13 +1796,16 @@ function renderDeathSaves(c){
 }
 
 /* ---- HP numpad ---- */
-let _npCharId=null, _npDir=0, _npVal='';
-function openNumpad(id, dir){
-  _npCharId=id; _npDir=dir; _npVal='';
+let _npCharId=null, _npDir=0, _npVal='', _npMode='hp';
+function openNumpad(id, dir, mode='hp'){
+  _npCharId=id; _npDir=dir; _npVal=''; _npMode=mode;
   const disp=document.getElementById('numpadDisplay');
   disp.textContent='0'; disp.classList.add('empty');
+  const isTemp=mode==='temp';
   document.getElementById('numpadTitle').textContent=
-    dir<0?'How much damage?':dir>0?'How much healing?':'Enter amount';
+    isTemp?'Temp HP (tager det højeste)':dir<0?'How much damage?':dir>0?'How much healing?':'Enter amount';
+  document.getElementById('npHpActions').style.display=isTemp?'none':'grid';
+  document.getElementById('npTempActions').style.display=isTemp?'block':'none';
   document.getElementById('numpadModal').classList.add('open');
 }
 function closeNumpad(){ document.getElementById('numpadModal').classList.remove('open'); }
@@ -1819,10 +1825,16 @@ function npBack(){
 async function npApply(dir){
   const amount=Math.max(1,parseInt(_npVal)||1);
   closeNumpad();
-  /* update the display button on the sheet */
   const btn=document.getElementById('hpAmt-'+_npCharId);
   if(btn) btn.textContent=amount;
   await bumpHP(_npCharId, dir, amount);
+}
+async function npApplyTemp(){
+  const amount=Math.max(1,parseInt(_npVal)||1);
+  closeNumpad();
+  const c=chars.find(x=>x.id===_npCharId); if(!c) return;
+  c.tempHp=Math.max(c.tempHp||0, amount);
+  await Store.save(chars); renderDetail(_npCharId);
 }
 
 async function bumpHP(id, direction, amount=1){
@@ -1861,14 +1873,7 @@ async function restHP(id){
   renderDetail(id);
 }
 
-async function addTempHp(id){
-  const c=chars.find(x=>x.id===id); if(!c) return;
-  const v=parseInt(prompt('Temp HP to add (takes the higher value):', (c.tempHp||0)||''));
-  if(!v||isNaN(v)||v<=0) return;
-  c.tempHp=Math.max(c.tempHp||0, v); // temp HP doesn't stack — use higher
-  await Store.save(chars);
-  renderDetail(id);
-}
+function addTempHp(id){ openNumpad(id, 0, 'temp'); }
 
 async function clearTempHp(id){
   const c=chars.find(x=>x.id===id); if(!c) return;
