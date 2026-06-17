@@ -1412,7 +1412,9 @@ function renderAttacks(c){
 }
 
 async function deleteChar(id){
-  if(!confirm('Delete this character? This can\'t be undone.')) return;
+  const c=chars.find(x=>x.id===id);
+  const ok=await showConfirm('Delete character?',`"${c?esc(c.name):'This character'}" will be permanently deleted. This can't be undone.`,'Delete','⚠️');
+  if(!ok) return;
   chars=chars.filter(x=>x.id!==id);
   await Store.save(chars);
   renderHome();
@@ -2660,7 +2662,9 @@ async function saveAttack(){
 }
 async function deleteAttackCurrent(){
   if(!editingAttackId) return;
-  if(!confirm('Delete this attack?')) return;
+  const ca=chars.find(x=>x.id===attackParentId); const aa=ca&&(ca.attacks||[]).find(x=>x.id===editingAttackId);
+  const ok=await showConfirm('Delete attack?',`"${aa?esc(aa.name):'This attack'}" will be removed. This can't be undone.`,'Delete','🗑️');
+  if(!ok) return;
   const c=chars.find(x=>x.id===attackParentId);
   c.attacks=c.attacks.filter(x=>x.id!==editingAttackId);
   await Store.save(chars); renderDetail(c.id); go('detail');
