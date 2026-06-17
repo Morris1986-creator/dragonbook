@@ -575,6 +575,44 @@
     color:var(--bone);min-width:26px;text-align:right;flex-shrink:0}
   .skill-row.prof .skill-bonus{color:var(--gold-hi)}
 
+  /* ---------- Crafting ---------- */
+  .craft-card{background:linear-gradient(180deg,var(--surface),#220f14);border:1px solid var(--edge);
+    border-radius:16px;padding:15px 16px;margin-bottom:12px;position:relative;overflow:hidden}
+  .craft-card::before{content:"";position:absolute;inset:0;border-radius:16px;padding:1px;
+    background:linear-gradient(160deg,rgba(201,162,75,.35),transparent 45%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .craft-name{font-family:'Cinzel',serif;font-weight:700;font-size:1.05rem;color:var(--bone);margin-bottom:4px}
+  .craft-stats{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--gold-hi);margin-bottom:6px}
+  .craft-lore{font-size:.74rem;color:var(--muted);line-height:1.5;margin-bottom:10px;font-style:italic}
+  .craft-props{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+  .craft-prop{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.03em;
+    background:rgba(201,162,75,.08);border:1px solid var(--edge-gold);color:var(--gold-hi);
+    border-radius:5px;padding:2px 7px}
+  .craft-btns{display:flex;gap:8px}
+  .craft-btn{flex:1;border-radius:10px;padding:9px 6px;font-family:'Cinzel',serif;font-weight:700;
+    font-size:.76rem;letter-spacing:.04em;cursor:pointer;border:1px solid var(--edge);
+    background:var(--bg2);color:var(--muted)}
+  .craft-btn:active{transform:scale(.96)}
+  .craft-btn.assign{border-color:var(--gold);color:var(--gold-hi);background:rgba(201,162,75,.08)}
+  .craft-btn.edit-btn{border-color:var(--edge)}
+  .craft-btn.del{border-color:rgba(183,64,59,.5);color:var(--crimson)}
+  .prop-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+  .prop-tog{border:1px solid var(--edge);background:var(--surface);color:var(--muted);
+    border-radius:9px;padding:7px 11px;font-family:'Space Mono',monospace;font-size:.72rem;
+    cursor:pointer;transition:.12s}
+  .prop-tog.on{border-color:var(--gold);color:var(--gold-hi);background:rgba(201,162,75,.1)}
+  .prop-tog:active{transform:scale(.94)}
+  .lore-field{width:100%;background:var(--bg2);border:1px solid var(--edge);border-radius:12px;
+    color:var(--bone);font-family:'Sora',sans-serif;font-size:.9rem;padding:12px 14px;
+    outline:none;resize:none;min-height:80px;transition:border-color .2s}
+  .lore-field:focus{border-color:var(--gold)}
+  .craft-assign-card{background:var(--surface);border:1px solid var(--edge);border-radius:13px;
+    padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer;margin-bottom:9px}
+  .craft-assign-card:active{background:var(--surface2)}
+  .craft-assign-name{font-family:'Cinzel',serif;font-weight:600;font-size:.95rem;flex:1}
+  .craft-assign-sub{font-size:.74rem;color:var(--muted);margin-top:2px}
+
   /* ---------- Class preset ---------- */
   .preset-card{display:flex;align-items:center;justify-content:center;gap:10px;
     border:1.5px dashed var(--edge-gold);border-radius:14px;padding:15px;cursor:pointer;
@@ -645,6 +683,11 @@
     <div class="license-note" id="licenseNote" hidden>This work includes material from the System Reference Document 5.1 ("SRD 5.1") by Wizards of the Coast LLC, available under the Creative Commons Attribution 4.0 International License.</div>
     <div class="section-label" id="rosterLabel">Your heroes</div>
     <div class="roster" id="roster"></div>
+    <button class="studio-btn" onclick="openCraft()">
+      <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+      <span class="grow">Crafting — forge custom weapons</span>
+      <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
+    </button>
     <button class="studio-btn" onclick="openDice()">
       <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></span>
       <span class="grow">Dice appearance</span>
@@ -787,6 +830,61 @@
     </div>
   </section>
 
+  <!-- ============ CRAFTING LIST ============ -->
+  <section class="view" id="view-craft">
+    <div class="topbar">
+      <button class="iconbtn" onclick="go('home')" aria-label="Back">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 16l-6-6 6-6"/></svg>
+      </button>
+      <h1>Crafting</h1>
+    </div>
+    <div class="section-label" id="craftLabel">Forged weapons</div>
+    <div id="craftList"></div>
+    <div class="add-card" onclick="newCraftWeapon()"><span class="plus">+</span> Forge a weapon</div>
+  </section>
+
+  <!-- ============ CRAFTING EDITOR ============ -->
+  <section class="view" id="view-craft-edit">
+    <div class="topbar">
+      <button class="iconbtn" onclick="go('craft')" aria-label="Back">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 16l-6-6 6-6"/></svg>
+      </button>
+      <h1 id="craftEditTitle">Forge weapon</h1>
+    </div>
+
+    <div class="field">
+      <label>Weapon name</label>
+      <input id="cw-name" type="text" placeholder="e.g. Shadowfang Dagger" autocomplete="off">
+    </div>
+
+    <div class="section-label" style="margin-top:4px">Base damage</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="stepper sm"><button onclick="cwBumpN(-1)">−</button><div class="sv" id="cw-n">1</div><button onclick="cwBumpN(1)">+</button></div>
+      <span class="base-x">×</span>
+      <div class="diechips" id="cwDieChips"></div>
+    </div>
+
+    <div class="field">
+      <label>Damage type</label>
+      <select id="cw-type"></select>
+    </div>
+
+    <div class="field">
+      <label>Properties</label>
+      <div class="prop-grid" id="cwProps"></div>
+    </div>
+
+    <div class="field">
+      <label>Lore / description — optional</label>
+      <textarea class="lore-field" id="cw-lore" placeholder="Forged from the scales of a green dragon…"></textarea>
+    </div>
+
+    <div class="save-bar">
+      <button class="btn-primary" onclick="saveCraftWeapon()">Save weapon</button>
+      <button class="btn-ghost danger" id="cw-delete" style="display:none" onclick="deleteCraftWeapon()">Delete</button>
+    </div>
+  </section>
+
   <!-- ============ DICE APPEARANCE ============ -->
   <section class="view" id="view-dice">
     <div class="topbar">
@@ -806,6 +904,17 @@
     </div>
   </section>
 
+</div>
+
+<!-- ============ CRAFT ASSIGN MODAL ============ -->
+<div class="modal" id="craftAssignModal">
+  <div class="combat-card" style="max-width:380px">
+    <button class="combat-close" onclick="document.getElementById('craftAssignModal').classList.remove('open')" aria-label="Close">×</button>
+    <div style="font-family:'Cinzel',serif;font-weight:800;font-size:1.1rem;letter-spacing:.08em;color:var(--gold-hi);text-align:center;margin-bottom:6px">Add to character</div>
+    <div style="font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace;text-align:center;margin-bottom:16px" id="craftAssignWeaponName"></div>
+    <div id="craftAssignList"></div>
+    <div class="empty" id="craftAssignEmpty" style="display:none;padding:16px;font-size:.84rem">No characters yet — create one first.</div>
+  </div>
 </div>
 
 <!-- ============ CHEAT PIN ============ -->
@@ -2034,6 +2143,187 @@ function rollInTray(container, dice){
   });
 }
 
+/* ================= CRAFTING ================= */
+let craftedWeapons=[];
+let cwEdit=null, editingCwId=null;
+const CW_PROPS=['Finesse','Light','Heavy','Two-Handed','Reach','Thrown','Ammunition','Versatile'];
+
+/* extend Store with crafting persistence */
+Store.loadCraft=async function(){
+  try{ if(window.storage){ const r=await window.storage.get('craftedWeapons'); if(r&&r.value) return JSON.parse(r.value); } }catch(e){}
+  return [];
+};
+Store.saveCraft=async function(list){
+  try{ if(window.storage){ await window.storage.set('craftedWeapons',JSON.stringify(list)); } }catch(e){}
+};
+
+function mergeCraftedIntoWeapons(){
+  /* remove any previously merged crafted entries then re-add */
+  const base=WEAPONS.filter(w=>!w.custom);
+  WEAPONS.length=0; base.forEach(w=>WEAPONS.push(w));
+  craftedWeapons.forEach(cw=>WEAPONS.push({
+    name:cw.name, cat:'Crafted', n:cw.n, s:cw.s, type:cw.type,
+    props:cw.props||[], custom:true, id:cw.id
+  }));
+}
+
+function refreshWeaponSelect(){
+  mergeCraftedIntoWeapons();
+  const allCats=[...WEAPON_CATS];
+  if(craftedWeapons.length) allCats.push('Crafted');
+  let opts='<option value="">— none (custom) —</option>';
+  allCats.forEach(cat=>{
+    const ws=WEAPONS.filter(w=>w.cat===cat);
+    if(!ws.length) return;
+    opts+=`<optgroup label="${cat}">` +
+      ws.map(w=>`<option value="${w.name}">${w.name} · ${w.n}d${w.s}${w.vers?` (${w.vers[0]}d${w.vers[1]})`:''}</option>`).join('') +
+      '</optgroup>';
+  });
+  const sel=document.getElementById('a-weapon');
+  if(sel) sel.innerHTML=opts;
+}
+
+/* ---- craft list view ---- */
+function openCraft(){ renderCraftList(); go('craft'); }
+function renderCraftList(){
+  const box=document.getElementById('craftList');
+  document.getElementById('craftLabel').style.display=craftedWeapons.length?'block':'none';
+  if(!craftedWeapons.length){ box.innerHTML='<div class="empty" style="padding:20px 0 10px"><div class="e-title">No forged weapons yet</div>Craft a custom weapon and assign it to your heroes.</div>'; return; }
+  box.innerHTML=craftedWeapons.map(cw=>{
+    const props=(cw.props||[]).map(p=>`<span class="craft-prop">${p}</span>`).join('');
+    return `<div class="craft-card">
+      <div class="craft-name">${esc(cw.name)}</div>
+      <div class="craft-stats">${cw.n}d${cw.s} ${cw.type||''}</div>
+      ${props?`<div class="craft-props">${props}</div>`:''}
+      ${cw.lore?`<div class="craft-lore">${esc(cw.lore)}</div>`:''}
+      <div class="craft-btns">
+        <button class="craft-btn assign" onclick="assignCraftWeapon('${cw.id}')">⚔ Add to character</button>
+        <button class="craft-btn edit-btn" onclick="editCraftWeapon('${cw.id}')">Edit</button>
+        <button class="craft-btn del" onclick="confirmDeleteCraft('${cw.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- craft editor ---- */
+function buildCraftEditor(){
+  document.getElementById('cw-type').innerHTML=DMG_TYPES.map(t=>`<option value="${t}">${t||'— none —'}</option>`).join('');
+  renderCwDieChips();
+  renderCwProps();
+}
+function renderCwDieChips(){
+  document.getElementById('cwDieChips').innerHTML=[4,6,8,10,12].map(s=>
+    `<button class="diechip${cwEdit&&cwEdit.s===s?' on':''}" onclick="setCwDie(${s})">d${s}</button>`).join('');
+}
+function renderCwProps(){
+  document.getElementById('cwProps').innerHTML=CW_PROPS.map(p=>{
+    const on=cwEdit&&(cwEdit.props||[]).includes(p);
+    return `<button class="prop-tog${on?' on':''}" onclick="toggleCwProp('${p}')">${p}</button>`;
+  }).join('');
+}
+function setCwDie(s){ cwEdit.s=s; renderCwDieChips(); }
+function cwBumpN(d){ cwEdit.n=Math.max(1,Math.min(10,cwEdit.n+d)); document.getElementById('cw-n').textContent=cwEdit.n; }
+function toggleCwProp(p){
+  const i=(cwEdit.props||[]).indexOf(p);
+  if(i>=0) cwEdit.props.splice(i,1); else cwEdit.props.push(p);
+  renderCwProps();
+}
+
+function newCraftWeapon(){
+  editingCwId=null;
+  cwEdit={name:'',n:1,s:8,type:'Slashing',props:[],lore:''};
+  document.getElementById('craftEditTitle').textContent='Forge weapon';
+  document.getElementById('cw-name').value='';
+  document.getElementById('cw-n').textContent='1';
+  document.getElementById('cw-type').value='Slashing';
+  document.getElementById('cw-lore').value='';
+  document.getElementById('cw-delete').style.display='none';
+  renderCwDieChips(); renderCwProps(); go('craft-edit');
+}
+function editCraftWeapon(id){
+  const cw=craftedWeapons.find(x=>x.id===id); if(!cw) return;
+  editingCwId=id;
+  cwEdit={name:cw.name,n:cw.n,s:cw.s,type:cw.type||'',props:[...(cw.props||[])],lore:cw.lore||''};
+  document.getElementById('craftEditTitle').textContent='Edit weapon';
+  document.getElementById('cw-name').value=cw.name;
+  document.getElementById('cw-n').textContent=cw.n;
+  document.getElementById('cw-type').value=cw.type||'';
+  document.getElementById('cw-lore').value=cw.lore||'';
+  document.getElementById('cw-delete').style.display='block';
+  renderCwDieChips(); renderCwProps(); go('craft-edit');
+}
+async function saveCraftWeapon(){
+  const name=document.getElementById('cw-name').value.trim();
+  if(!name){ const el=document.getElementById('cw-name'); el.style.borderColor='var(--crimson)'; el.focus(); return; }
+  cwEdit.name=name;
+  cwEdit.type=document.getElementById('cw-type').value;
+  cwEdit.lore=document.getElementById('cw-lore').value.trim();
+  if(editingCwId){
+    const cw=craftedWeapons.find(x=>x.id===editingCwId);
+    Object.assign(cw,cwEdit);
+  } else {
+    const cw={...cwEdit,id:'cw'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)};
+    craftedWeapons.push(cw);
+  }
+  await Store.saveCraft(craftedWeapons);
+  refreshWeaponSelect();
+  renderCraftList();
+  go('craft');
+}
+async function confirmDeleteCraft(id){
+  if(!confirm('Delete this weapon? It will be removed from all characters.')) return;
+  craftedWeapons=craftedWeapons.filter(x=>x.id!==id);
+  /* remove attacks using this weapon from all chars */
+  const wName=(WEAPONS.find(w=>w.id===id)||{}).name;
+  if(wName) chars.forEach(c=>{ c.attacks=(c.attacks||[]).filter(a=>a.weapon!==wName); });
+  await Store.saveCraft(craftedWeapons);
+  await Store.save(chars);
+  refreshWeaponSelect();
+  renderCraftList();
+}
+async function deleteCraftWeapon(){
+  if(!editingCwId) return;
+  await confirmDeleteCraft(editingCwId);
+  go('craft');
+}
+
+/* ---- assign to character ---- */
+function assignCraftWeapon(cwId){
+  const cw=craftedWeapons.find(x=>x.id===cwId); if(!cw) return;
+  document.getElementById('craftAssignWeaponName').textContent=`"${cw.name}" · ${cw.n}d${cw.s} ${cw.type||''}`;
+  const list=document.getElementById('craftAssignList');
+  const empty=document.getElementById('craftAssignEmpty');
+  if(!chars.length){ list.innerHTML=''; empty.style.display='block'; }
+  else {
+    empty.style.display='none';
+    list.innerHTML=chars.map(c=>`
+      <div class="craft-assign-card" onclick="doAssignCraft('${c.id}','${cwId}')">
+        <div class="sigil" style="width:40px;height:40px;flex-shrink:0">${icon(c.klasse)}</div>
+        <div>
+          <div class="craft-assign-name">${esc(c.name)}</div>
+          <div class="craft-assign-sub">${[c.level?'Lvl '+c.level:'',c.race,c.klasse].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('craftAssignModal').classList.add('open');
+}
+async function doAssignCraft(charId,cwId){
+  document.getElementById('craftAssignModal').classList.remove('open');
+  const c=chars.find(x=>x.id===charId); if(!c) return;
+  const cw=craftedWeapons.find(x=>x.id===cwId); if(!cw) return;
+  if(!c.attacks) c.attacks=[];
+  const atk={
+    id:'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    name:cw.name, weapon:cw.name, hands:1,
+    base:{n:cw.n,s:cw.s}, auto:true, ability:'auto', prof:true, toHit:0,
+    dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0}, type:cw.type||'', combos:[]
+  };
+  c.attacks.push(atk);
+  await Store.save(chars);
+  renderDetail(charId);
+  go('detail');
+}
+
 /* ================= WEAPONS & DAMAGE TYPES ================= */
 const WEAPONS=[
   {name:'Club',cat:'Simple Melee',n:1,s:4,type:'Bludgeoning',props:['Light']},
@@ -2130,9 +2420,7 @@ function attackCounts(a){
 let aEdit=null, editingAttackId=null, attackParentId=null;
 
 function buildAttackEditor(){
-  let opts='<option value="">— none (custom) —</option>';
-  WEAPON_CATS.forEach(cat=>{ opts+=`<optgroup label="${cat}">`+WEAPONS.filter(w=>w.cat===cat).map(w=>`<option value="${w.name}">${w.name} · ${w.n}d${w.s}${w.vers?` (${w.vers[0]}d${w.vers[1]})`:''}</option>`).join('')+'</optgroup>'; });
-  document.getElementById('a-weapon').innerHTML=opts;
+  refreshWeaponSelect();
   document.getElementById('a-type').innerHTML=DMG_TYPES.map(t=>`<option value="${t}">${t||'— none —'}</option>`).join('');
   document.getElementById('dmgGrid').innerHTML=[4,6,8,10,12].map(s=>`
     <div class="dmg-row"><span class="dlabel">d${s}</span>
@@ -2487,8 +2775,12 @@ async function saveDiceSkin(){
 (async function(){
   document.getElementById('crestSlot').innerHTML=CREST;
   document.getElementById('splashCrest').innerHTML=CREST;
-  buildSelects(); buildAbilities(); buildAttackEditor(); buildDiceDefs(); applyStoneFloor();
+  buildSelects(); buildAbilities(); buildDiceDefs(); applyStoneFloor();
   const sv=await Store.loadSkin(); if(sv) SKIN=sv;
+  craftedWeapons=await Store.loadCraft();
+  mergeCraftedIntoWeapons();
+  buildAttackEditor();
+  buildCraftEditor();
   chars=await Store.load();
   renderHome();
   setTimeout(()=>{
