@@ -1037,7 +1037,7 @@ function renderAttacks(c){
   list.innerHTML=c.attacks.map(a=>{
     const th=effToHit(a,c);
     const meta=[`${th>=0?'+':''}${th} to hit`, dmgSummaryText(a,c), a.type].filter(Boolean).join(' · ');
-    const combos=(a.combos||[]).map(c=>`<span class="atk-combo">${(COMBOS[c.key]||{}).name||c.key}</span>`).join('');
+    const combos=(a.combos||[]).map(co=>`<span class="atk-combo">${(COMBOS[co.key]||{}).name||co.key}</span>`).join('');
     return `<div class="atk">
       <div class="atk-main" onclick="startAttack('${c.id}','${a.id}')">
         <div class="atk-name">${esc(a.name)}</div>
@@ -1244,29 +1244,47 @@ function applyHpSuggest(){
 
 /* ================= RACE TRAITS ================= */
 const RACE_TRAITS={
+  Human:[
+    {name:'Extra Language',    note:'You can speak, read, and write one extra language of your choice.'},
+  ],
   Dwarf:[
-    {name:'Dwarven Resilience', note:'Advantage on saving throws vs. poison; resistance to poison damage.'},
+    {name:'Darkvision',        note:'See in dim light as bright, and darkness as dim light, within 60 ft.'},
+    {name:'Dwarven Resilience',note:'Advantage on saving throws vs. poison; resistance to poison damage.'},
+    {name:'Stonecunning',      note:'Double proficiency bonus on Intelligence (History) checks about stonework.'},
   ],
   Elf:[
-    {name:'Fey Ancestry',  note:'Advantage on saves vs. charm; immune to magical sleep.'},
-    {name:'Keen Senses',   note:'Proficiency in the Perception skill.'},
+    {name:'Darkvision',  note:'See in dim light as bright, and darkness as dim light, within 60 ft.'},
+    {name:'Fey Ancestry',note:'Advantage on saves vs. charm; immune to magical sleep.'},
+    {name:'Keen Senses', note:'Proficiency in the Perception skill.'},
+    {name:'Trance',      note:'You don\'t need to sleep. Instead you meditate for 4 hours (equivalent of 8 hours sleep).'},
   ],
   Halfling:[
-    {name:'Lucky', note:'When you roll a 1 on a d20, reroll it and use the new result.'},
-    {name:'Brave', note:'Advantage on saving throws against being frightened.'},
+    {name:'Lucky',              note:'When you roll a 1 on a d20 attack, ability check, or saving throw, reroll and use the new result.'},
+    {name:'Brave',              note:'Advantage on saving throws against being frightened.'},
+    {name:'Halfling Nimbleness',note:'You can move through the space of any creature one size larger than you.'},
   ],
   'Half-Elf':[
-    {name:'Fey Ancestry', note:'Advantage on saves vs. charm; immune to magical sleep.'},
+    {name:'Darkvision',        note:'See in dim light as bright, and darkness as dim light, within 60 ft.'},
+    {name:'Fey Ancestry',      note:'Advantage on saves vs. charm; immune to magical sleep.'},
+    {name:'Skill Versatility', note:'Proficiency in two skills of your choice.'},
   ],
   'Half-Orc':[
-    {name:'Relentless Endurance', note:'Once per long rest: instead of dropping to 0 HP you drop to 1 HP.'},
-    {name:'Savage Attacks',       note:'On a melee critical hit, roll one weapon damage die extra and add it.'},
+    {name:'Darkvision',          note:'See in dim light as bright, and darkness as dim light, within 60 ft.'},
+    {name:'Menacing',            note:'Proficiency in the Intimidation skill.'},
+    {name:'Relentless Endurance',note:'Once per long rest: instead of dropping to 0 HP you drop to 1 HP.'},
+    {name:'Savage Attacks',      note:'On a melee critical hit, roll one weapon damage die extra and add it.'},
   ],
   Tiefling:[
-    {name:'Hellish Resistance', note:'Resistance to fire damage.'},
+    {name:'Darkvision',      note:'See in dim light as bright, and darkness as dim light, within 60 ft.'},
+    {name:'Hellish Resistance',note:'Resistance to fire damage.'},
+    {name:'Infernal Legacy', note:'Thaumaturgy cantrip. At 3rd level: Hellish Rebuke 2nd-level (CHA save). At 5th level: Darkness (once per long rest).'},
   ],
   Dragonborn:[
-    {name:'Damage Resistance', note:'Resistance to your ancestry\'s damage type.'},
+    {name:'Damage Resistance',note:'Resistance to your ancestry\'s damage type.'},
+  ],
+  Gnome:[
+    {name:'Darkvision',    note:'See in dim light as bright, and darkness as dim light, within 60 ft.'},
+    {name:'Gnome Cunning', note:'Advantage on all Intelligence, Wisdom, and Charisma saving throws against magic.'},
   ],
 };
 const DRAGONBORN_ANCESTRY={
@@ -1291,7 +1309,7 @@ function renderRaceTraits(c){
     const anc=DRAGONBORN_ANCESTRY[c.ancestry||'Red'];
     const L=c.level||1;
     const n=L>=16?5:L>=11?4:L>=6?3:2;
-    const dc=8+mod(c.stats&&c.stats.con||10)+pb(L);
+    const dc=8+mod((c.stats&&c.stats.con)||10)+pb(L);
     breathCard=`
       <div class="trait-card">
         <div class="trait-name">Breath Weapon</div>
@@ -1315,7 +1333,7 @@ async function rollBreath(id){
   for(let i=0;i<n;i++){ const v=Math.floor(Math.random()*6)+1; rolls.push(v); total+=v; }
   buzz(15);
   const el=document.getElementById('breathResult');
-  if(el){ el.textContent=`${total} ${anc.type} (${rolls.join('+')})`; el.className='breath-result'; }
+  if(el){ el.className=''; void el.offsetWidth; el.textContent=`${total} ${anc.type} (${rolls.join('+')})`; el.className='breath-result'; }
 }
 
 /* ================= SKILLS ================= */
@@ -1345,7 +1363,7 @@ function renderSkills(c){
   const profBonus=pb(c.level||1);
   const items=SKILLS.map(sk=>{
     const isPro=profs.includes(sk.key);
-    const bonus=mod(c.stats&&c.stats[sk.ab]||10)+(isPro?profBonus:0);
+    const bonus=mod((c.stats&&c.stats[sk.ab])||10)+(isPro?profBonus:0);
     const bStr=bonus>=0?'+'+bonus:''+bonus;
     return `<div class="skill-row${isPro?' prof':''}" onclick="toggleSkillProf('${c.id}','${sk.key}')">
       <div class="skill-pip"></div>
@@ -2085,12 +2103,12 @@ async function saveAttack(){
   await Store.save(chars);
   renderDetail(c.id); go('detail');
 }
-function deleteAttackCurrent(){
+async function deleteAttackCurrent(){
   if(!editingAttackId) return;
   if(!confirm('Delete this attack?')) return;
   const c=chars.find(x=>x.id===attackParentId);
   c.attacks=c.attacks.filter(x=>x.id!==editingAttackId);
-  Store.save(chars); renderDetail(c.id); go('detail');
+  await Store.save(chars); renderDetail(c.id); go('detail');
 }
 function backToDetail(){ renderDetail(attackParentId||currentId); go('detail'); }
 
@@ -2105,7 +2123,8 @@ function fireOn(){ const f=document.getElementById('fireLayer'); if(f) f.classLi
 function fireOff(){ const f=document.getElementById('fireLayer'); if(f) f.classList.remove('on'); }
 
 async function startAttack(charId,atkId){
-  const c=chars.find(x=>x.id===charId); const a=c.attacks.find(x=>x.id===atkId); if(!c||!a) return;
+  const c=chars.find(x=>x.id===charId); if(!c) return;
+  const a=(c.attacks||[]).find(x=>x.id===atkId); if(!a) return;
   document.getElementById('cAtk').textContent=a.name;
   document.getElementById('cChar').textContent=c.name+(c.klasse?' · '+c.klasse:'');
   tray().innerHTML=''; cap(''); acts(''); fireOff();
