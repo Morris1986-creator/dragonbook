@@ -44,6 +44,21 @@
   .view.active{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
+  /* ---------- beta banner ---------- */
+  .beta-banner{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:linear-gradient(90deg,rgba(183,64,59,.18),rgba(183,64,59,.28),rgba(183,64,59,.18));
+    border:1px solid rgba(183,64,59,.55);border-radius:10px;
+    color:#f2c9c7;font-family:'Space Mono',monospace;font-size:.62rem;
+    letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;
+    margin-bottom:4px;
+  }
+  .beta-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--crimson);flex-shrink:0;
+    box-shadow:0 0 6px var(--crimson);animation:betapulse 1.8s ease-in-out infinite;
+  }
+  @keyframes betapulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
   /* ---------- header / crest ---------- */
   .crest-row{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 0 22px}
   .home-top{display:flex;justify-content:space-between;align-items:center;padding:2px 2px 0}
@@ -519,6 +534,10 @@
 
   <!-- ============ HOME ============ -->
   <section class="view active" id="view-home">
+    <div class="beta-banner">
+      <span class="beta-dot"></span>
+      BETA — under development · features may change
+    </div>
     <div class="home-top">
       <button class="brandmark" onclick="toggleLicense()" aria-label="Licensing">SRD 5.1 · CC BY 4.0</button>
       <span class="creator">by Morris</span>
