@@ -1460,7 +1460,7 @@ function weaponAbilityKey(a, c){
   if(a.ability && a.ability!=='auto') return a.ability;
   const w=WEAPONS.find(x=>x.name===a.weapon);
   if(w){
-    if(w.fin && c && c.stats) return (mod(c.stats.str)>=mod(c.stats.dex))?'str':'dex';
+    if(w.props&&w.props.includes('Finesse')&&c&&c.stats) return (mod(c.stats.str)>=mod(c.stats.dex))?'str':'dex';
     return (w.cat.indexOf('Ranged')>=0)?'dex':'str';
   }
   return 'str';
@@ -2416,7 +2416,10 @@ async function saveChar(){
     currentId=editingId;
   }else{
     data.id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    data.hp=maxHp; // new chars start at full HP
+    data.hp=maxHp;
+    data.tempHp=0; data.attacks=[]; data.conditions=[]; data.skillProfs=[];
+    data.deathSaves={s:0,f:0}; data.slotsUsed={}; data.notes='';
+    data.currency={gp:0,sp:0,cp:0}; data.inventory=[]; data.spells=[];
     chars.push(data); currentId=data.id;
   }
   await Store.save(chars);
@@ -3884,7 +3887,7 @@ function renderCombos(){
   }).join('');
 }
 function toggleCombo(i){ const c=combatState.combos[i]; if(!c) return; c.on=!c.on; renderCombos(); }
-function smiteSlot(i,d){ const c=combatState.combos[i]; if(!c) return; c.slot=Math.max(1,Math.min(4,(c.slot||1)+d)); renderCombos(); }
+function smiteSlot(i,d){ const c=combatState.combos[i]; if(!c) return; c.slot=Math.max(1,Math.min(5,(c.slot||1)+d)); renderCombos(); }
 function smiteUndead(i){ const c=combatState.combos[i]; if(!c) return; c.undead=!c.undead; renderCombos(); }
 
 async function rollDamage(){
