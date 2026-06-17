@@ -433,6 +433,30 @@
   .ds-result.epic{border-color:var(--gold);color:var(--gold-hi)}
   @keyframes dsfade{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
 
+  /* ---------- Initiative ---------- */
+  .init-strip{display:flex;align-items:center;gap:11px;margin-top:14px;
+    background:var(--surface);border:1px solid var(--edge);border-radius:13px;padding:10px 14px}
+  .init-meta{flex:1}
+  .init-lbl{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .init-sub{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px}
+  .init-result{font-family:'Cinzel',serif;font-weight:800;font-size:1.9rem;line-height:1;
+    min-width:48px;text-align:center;color:var(--bone)}
+  .init-result.nat20{color:var(--gold-hi);text-shadow:0 0 16px rgba(240,203,122,.4)}
+  .init-result.nat1{color:var(--crimson)}
+  .init-clear{border:none;background:none;color:var(--muted);font-size:1.4rem;cursor:pointer;
+    padding:0 2px;line-height:1;flex-shrink:0}
+  .init-roll-btn{border:1px solid var(--gold);background:rgba(201,162,75,.1);color:var(--gold-hi);
+    border-radius:10px;padding:9px 13px;font-family:'Cinzel',serif;font-weight:700;
+    font-size:.78rem;letter-spacing:.06em;cursor:pointer;flex-shrink:0}
+  .init-roll-btn:active{transform:scale(.95)}
+
+  /* ---------- Class preset ---------- */
+  .preset-card{display:flex;align-items:center;justify-content:center;gap:10px;
+    border:1.5px dashed var(--edge-gold);border-radius:14px;padding:15px;cursor:pointer;
+    color:var(--gold);font-family:'Cinzel',serif;font-weight:600;font-size:.9rem;letter-spacing:.04em;
+    background:rgba(201,162,75,.03);margin-bottom:10px;transition:.15s}
+  .preset-card:active{background:rgba(201,162,75,.08)}
+
   /* ---------- Spell Slots ---------- */
   .slots-section{margin-top:18px}
   .slot-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;
@@ -927,7 +951,8 @@ function renderDetail(id){
   const c=chars.find(x=>x.id===id); if(!c) return;
   const sb = ABILITIES.map(a=>`
     <div class="sb"><div class="sb-en">${a[2]}</div><div class="sb-val">${c.stats[a[0]]||'–'}</div><div class="sb-mod">${modStr(c.stats[a[0]])}</div></div>`).join('');
-  const hpac = renderHpAc(c);
+  const init  = renderInitiative(c);
+  const hpac  = renderHpAc(c);
   const slots = renderSpellSlots(c);
   const conds = renderConditions(c);
   document.getElementById('detailBody').innerHTML=`
@@ -937,6 +962,7 @@ function renderDetail(id){
       <div class="sheet-sub">${[c.level?('Lvl '+c.level):'',c.race,c.klasse,c.height].filter(Boolean).join(' · ')||'Unknown wanderer'}</div>
     </div>
     <div class="statblock">${sb}</div>
+    ${init}
     ${hpac}
     ${slots}
     ${conds}
@@ -953,7 +979,11 @@ function renderDetail(id){
 function renderAttacks(c){
   const list=document.getElementById('atkList'); if(!list) return;
   if(!c.attacks||!c.attacks.length){
-    list.innerHTML=`<div class="empty" style="padding:16px;font-size:.85rem">No attacks yet — add one to roll to-hit and damage in a single tap.</div>`;
+    const hasPreset=CLASS_PRESETS[c.klasse];
+    list.innerHTML=hasPreset
+      ? `<div class="preset-card" onclick="applyPreset('${c.id}')"><span>⚔</span> Load ${esc(c.klasse)} starter kit</div>
+         <div class="empty" style="padding:4px 16px 12px;font-size:.82rem">Or add a custom attack below.</div>`
+      : `<div class="empty" style="padding:16px;font-size:.85rem">No attacks yet — add one to roll to-hit and damage in a single tap.</div>`;
     return;
   }
   list.innerHTML=c.attacks.map(a=>{
@@ -1162,6 +1192,114 @@ function updateHpSuggest(){
 function applyHpSuggest(){
   const v=suggestedHp(); if(v!=null) document.getElementById('f-maxhp').value=v;
   document.getElementById('hpSuggest').style.display='none';
+}
+
+/* ================= INITIATIVE ================= */
+function renderInitiative(c){
+  const dex = mod(c.stats&&c.stats.dex||10);
+  const dexLabel = dex>=0?'+'+dex:''+dex;
+  const hasRoll = c.initiative!=null;
+  const raw = c._initRoll;
+  const cls = raw===20?'nat20':raw===1?'nat1':'';
+  const display = hasRoll ? (c.initiative>=0?'+':'')+c.initiative : '—';
+  const clearBtn = hasRoll ? `<button class="init-clear" onclick="clearInit('${c.id}')" aria-label="Reset">×</button>` : '';
+  return `<div class="init-strip">
+    <div class="init-meta">
+      <div class="init-lbl">Initiative</div>
+      <div class="init-sub">DEX ${dexLabel}</div>
+    </div>
+    <div class="init-result ${cls}">${display}</div>
+    ${clearBtn}
+    <button class="init-roll-btn" onclick="rollInit('${c.id}')">🎲 Roll</button>
+  </div>`;
+}
+
+async function rollInit(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const roll=Math.floor(Math.random()*20)+1;
+  c._initRoll=roll;
+  c.initiative=roll+mod(c.stats&&c.stats.dex||10);
+  buzz(10);
+  await Store.save(chars); renderDetail(id);
+}
+async function clearInit(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  c.initiative=null; c._initRoll=null;
+  await Store.save(chars); renderDetail(id);
+}
+
+/* ================= CLASS PRESETS ================= */
+const CLASS_PRESETS={
+  Barbarian:[
+    {name:'Greataxe',weapon:'Greataxe',hands:2,base:{n:1,s:12},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Slashing',combos:[{key:'rage',flat:2}]}
+  ],
+  Bard:[
+    {name:'Rapier strike',weapon:'Rapier',hands:1,base:{n:1,s:8},auto:true,ability:'auto',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Piercing',combos:[]}
+  ],
+  Cleric:[
+    {name:'Mace strike',weapon:'Mace',hands:1,base:{n:1,s:6},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Bludgeoning',combos:[]}
+  ],
+  Druid:[
+    {name:'Quarterstaff',weapon:'Quarterstaff',hands:1,base:{n:1,s:6},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Bludgeoning',combos:[]}
+  ],
+  Fighter:[
+    {name:'Longsword',weapon:'Longsword',hands:1,base:{n:1,s:8},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Slashing',combos:[]},
+    {name:'Handaxe',weapon:'Handaxe',hands:1,base:{n:1,s:6},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Slashing',combos:[]}
+  ],
+  Monk:[
+    {name:'Shortsword',weapon:'Shortsword',hands:1,base:{n:1,s:6},auto:true,ability:'auto',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Piercing',combos:[]}
+  ],
+  Paladin:[
+    {name:'Longsword',weapon:'Longsword',hands:1,base:{n:1,s:8},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Slashing',combos:[{key:'smite',slot:1,undead:false},{key:'impsmite'}]}
+  ],
+  Ranger:[
+    {name:'Longbow',weapon:'Longbow',hands:2,base:{n:1,s:8},auto:true,ability:'dex',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Piercing',combos:[{key:'mark'}]}
+  ],
+  Rogue:[
+    {name:'Shortsword',weapon:'Shortsword',hands:1,base:{n:1,s:6},auto:true,ability:'auto',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Piercing',combos:[{key:'sneak',n:1}]}
+  ],
+  Sorcerer:[
+    {name:'Dagger',weapon:'Dagger',hands:1,base:{n:1,s:4},auto:true,ability:'auto',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Piercing',combos:[]}
+  ],
+  Warlock:[
+    {name:'Dagger',weapon:'Dagger',hands:1,base:{n:1,s:4},auto:true,ability:'auto',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Piercing',combos:[{key:'hex'}]}
+  ],
+  Wizard:[
+    {name:'Quarterstaff',weapon:'Quarterstaff',hands:1,base:{n:1,s:6},auto:true,ability:'str',prof:true,toHit:0,
+     dmg:{dice:{4:0,6:0,8:0,10:0,12:0},flat:0},type:'Bludgeoning',combos:[]}
+  ],
+};
+
+async function applyPreset(id){
+  const c=chars.find(x=>x.id===id); if(!c||!CLASS_PRESETS[c.klasse]) return;
+  const L=c.level||1;
+  c.attacks=CLASS_PRESETS[c.klasse].map(p=>{
+    const a=JSON.parse(JSON.stringify(p));
+    a.id='a'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
+    // Scale Sneak Attack dice to rogue level
+    const sneak=a.combos.find(co=>co.key==='sneak');
+    if(sneak) sneak.n=Math.ceil(L/2);
+    // Scale Rage flat bonus to level
+    const rage=a.combos.find(co=>co.key==='rage');
+    if(rage) rage.flat=L>=16?4:L>=9?3:2;
+    // Improved Divine Smite only at level 11+
+    const impIdx=a.combos.findIndex(co=>co.key==='impsmite');
+    if(impIdx>=0&&L<11) a.combos.splice(impIdx,1);
+    return a;
+  });
+  await Store.save(chars); renderDetail(id);
 }
 
 /* ================= SPELL SLOTS ================= */
