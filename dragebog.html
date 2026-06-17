@@ -450,6 +450,34 @@
     font-size:.78rem;letter-spacing:.06em;cursor:pointer;flex-shrink:0}
   .init-roll-btn:active{transform:scale(.95)}
 
+  /* ---------- Race traits ---------- */
+  .traits-section{margin-top:14px}
+  .trait-list{display:flex;flex-direction:column;gap:7px;margin-top:9px}
+  .trait-card{background:var(--surface);border:1px solid var(--edge);border-radius:11px;padding:10px 13px}
+  .trait-name{font-family:'Cinzel',serif;font-weight:600;font-size:.82rem;color:var(--gold-hi);margin-bottom:3px}
+  .trait-note{font-size:.74rem;color:var(--muted);line-height:1.5}
+  .breath-btn{width:100%;margin-top:10px;border:1px solid var(--crimson);background:rgba(183,64,59,.1);
+    color:#f2c9c7;border-radius:10px;padding:10px;font-family:'Cinzel',serif;font-weight:700;
+    font-size:.86rem;letter-spacing:.06em;cursor:pointer}
+  .breath-btn:active{transform:scale(.97)}
+  .breath-result{text-align:center;margin-top:8px;font-family:'Space Mono',monospace;font-weight:700;
+    font-size:.9rem;color:var(--bone);background:var(--bg2);border:1px solid var(--edge);
+    border-radius:9px;padding:9px;animation:dsfade 4.5s ease forwards}
+
+  /* ---------- Skills ---------- */
+  .skills-section{margin-top:18px}
+  .skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px}
+  .skill-row{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--edge);
+    border-radius:9px;padding:6px 9px;cursor:pointer;transition:border-color .12s,background .12s}
+  .skill-row.prof{border-color:var(--gold);background:rgba(201,162,75,.07)}
+  .skill-pip{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--edge);flex-shrink:0;transition:.12s}
+  .skill-row.prof .skill-pip{background:var(--gold);border-color:var(--gold)}
+  .skill-name{font-family:'Sora',sans-serif;font-size:.7rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .skill-ab{font-family:'Space Mono',monospace;font-size:.56rem;color:var(--muted);flex-shrink:0}
+  .skill-bonus{font-family:'Space Mono',monospace;font-weight:700;font-size:.78rem;
+    color:var(--bone);min-width:26px;text-align:right;flex-shrink:0}
+  .skill-row.prof .skill-bonus{color:var(--gold-hi)}
+
   /* ---------- Class preset ---------- */
   .preset-card{display:flex;align-items:center;justify-content:center;gap:10px;
     border:1.5px dashed var(--edge-gold);border-radius:14px;padding:15px;cursor:pointer;
@@ -532,6 +560,10 @@
         <label>Class</label>
         <select id="f-class"></select>
       </div>
+    </div>
+    <div class="field" id="ancestryField" style="display:none">
+      <label>Dragon Ancestry</label>
+      <select id="f-ancestry"></select>
     </div>
     <div class="two-col">
       <div class="field">
@@ -812,10 +844,16 @@ function esc(s){return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':
 
 /* ---------------- create / edit ---------------- */
 function buildSelects(){
-  document.getElementById('f-race').innerHTML='<option value="">— choose —</option>'+RACES.map(x=>`<option>${x}</option>`).join('');
+  const race=document.getElementById('f-race');
+  race.innerHTML='<option value="">— choose —</option>'+RACES.map(x=>`<option>${x}</option>`).join('');
+  race.addEventListener('change',()=>{
+    document.getElementById('ancestryField').style.display=race.value==='Dragonborn'?'block':'none';
+  });
   const cls=document.getElementById('f-class');
   cls.innerHTML='<option value="">— choose —</option>'+CLASSES.map(x=>`<option>${x}</option>`).join('');
   cls.addEventListener('change',updateHpSuggest);
+  document.getElementById('f-ancestry').innerHTML=
+    Object.keys(DRAGONBORN_ANCESTRY).map(k=>`<option value="${k}">${k} (${DRAGONBORN_ANCESTRY[k].type})</option>`).join('');
 }
 function buildAbilities(){
   document.getElementById('abilities').innerHTML = ABILITIES.map(a=>`
@@ -844,6 +882,8 @@ function newChar(){
   document.getElementById('f-level').value=1;
   document.getElementById('f-maxhp').value='';
   document.getElementById('f-ac').value='';
+  document.getElementById('f-ancestry').value='Red';
+  document.getElementById('ancestryField').style.display='none';
   document.getElementById('hpSuggest').style.display='none';
   ABILITIES.forEach(a=>{ document.getElementById('val-'+a[0]).value=10; document.getElementById('strip-'+a[0]).innerHTML=''; syncMod(a[0]); });
   go('edit');
@@ -860,6 +900,8 @@ function editChar(id){
   document.getElementById('f-level').value=c.level||1;
   document.getElementById('f-maxhp').value=c.maxHp||'';
   document.getElementById('f-ac').value=c.ac||'';
+  document.getElementById('f-ancestry').value=c.ancestry||'Red';
+  document.getElementById('ancestryField').style.display=c.race==='Dragonborn'?'block':'none';
   ABILITIES.forEach(a=>{ document.getElementById('val-'+a[0]).value=c.stats[a[0]]||10; document.getElementById('strip-'+a[0]).innerHTML=''; syncMod(a[0]); });
   updateHpSuggest();
   go('edit');
@@ -912,15 +954,17 @@ async function saveChar(){
   const rawAc=Math.round(Number(document.getElementById('f-ac').value));
   const maxHp=Number.isFinite(rawMaxHp)&&rawMaxHp>0?rawMaxHp:null;
   const ac=Number.isFinite(rawAc)&&rawAc>0?rawAc:null;
+  const raceVal=document.getElementById('f-race').value;
   const data={
     name,
-    race:document.getElementById('f-race').value,
+    race:raceVal,
     klasse:document.getElementById('f-class').value,
     height:document.getElementById('f-height').value.trim(),
     level:Math.max(1,Math.min(20,Math.round(Number(document.getElementById('f-level').value))||1)),
     stats,
     maxHp,
-    ac
+    ac,
+    ancestry:raceVal==='Dragonborn'?(document.getElementById('f-ancestry').value||'Red'):null
   };
   if(editingId){
     const c=chars.find(x=>x.id===editingId);
@@ -951,10 +995,12 @@ function renderDetail(id){
   const c=chars.find(x=>x.id===id); if(!c) return;
   const sb = ABILITIES.map(a=>`
     <div class="sb"><div class="sb-en">${a[2]}</div><div class="sb-val">${c.stats[a[0]]||'–'}</div><div class="sb-mod">${modStr(c.stats[a[0]])}</div></div>`).join('');
-  const init  = renderInitiative(c);
-  const hpac  = renderHpAc(c);
-  const slots = renderSpellSlots(c);
-  const conds = renderConditions(c);
+  const init   = renderInitiative(c);
+  const hpac   = renderHpAc(c);
+  const slots  = renderSpellSlots(c);
+  const conds  = renderConditions(c);
+  const traits = renderRaceTraits(c);
+  const skills = renderSkills(c);
   document.getElementById('detailBody').innerHTML=`
     <div class="sheet-crest">
       <div class="sheet-sigil">${icon(c.klasse)}</div>
@@ -962,10 +1008,12 @@ function renderDetail(id){
       <div class="sheet-sub">${[c.level?('Lvl '+c.level):'',c.race,c.klasse,c.height].filter(Boolean).join(' · ')||'Unknown wanderer'}</div>
     </div>
     <div class="statblock">${sb}</div>
+    ${traits}
     ${init}
     ${hpac}
     ${slots}
     ${conds}
+    ${skills}
     <div class="section-label" style="margin-top:26px">Attacks &amp; rolls</div>
     <div class="atk-list" id="atkList"></div>
     <div class="add-card" style="margin-top:11px" onclick="newAttack()"><span class="plus">+</span> Add attack</div>
@@ -1192,6 +1240,132 @@ function updateHpSuggest(){
 function applyHpSuggest(){
   const v=suggestedHp(); if(v!=null) document.getElementById('f-maxhp').value=v;
   document.getElementById('hpSuggest').style.display='none';
+}
+
+/* ================= RACE TRAITS ================= */
+const RACE_TRAITS={
+  Dwarf:[
+    {name:'Dwarven Resilience', note:'Advantage on saving throws vs. poison; resistance to poison damage.'},
+  ],
+  Elf:[
+    {name:'Fey Ancestry',  note:'Advantage on saves vs. charm; immune to magical sleep.'},
+    {name:'Keen Senses',   note:'Proficiency in the Perception skill.'},
+  ],
+  Halfling:[
+    {name:'Lucky', note:'When you roll a 1 on a d20, reroll it and use the new result.'},
+    {name:'Brave', note:'Advantage on saving throws against being frightened.'},
+  ],
+  'Half-Elf':[
+    {name:'Fey Ancestry', note:'Advantage on saves vs. charm; immune to magical sleep.'},
+  ],
+  'Half-Orc':[
+    {name:'Relentless Endurance', note:'Once per long rest: instead of dropping to 0 HP you drop to 1 HP.'},
+    {name:'Savage Attacks',       note:'On a melee critical hit, roll one weapon damage die extra and add it.'},
+  ],
+  Tiefling:[
+    {name:'Hellish Resistance', note:'Resistance to fire damage.'},
+  ],
+  Dragonborn:[
+    {name:'Damage Resistance', note:'Resistance to your ancestry\'s damage type.'},
+  ],
+};
+const DRAGONBORN_ANCESTRY={
+  Black:{type:'Acid',save:'DEX'},Blue:{type:'Lightning',save:'DEX'},
+  Brass:{type:'Fire',save:'DEX'},Bronze:{type:'Lightning',save:'DEX'},
+  Copper:{type:'Acid',save:'DEX'},Gold:{type:'Fire',save:'DEX'},
+  Green:{type:'Poison',save:'CON'},Red:{type:'Fire',save:'DEX'},
+  Silver:{type:'Cold',save:'CON'},White:{type:'Cold',save:'CON'}
+};
+
+function renderRaceTraits(c){
+  const traits=RACE_TRAITS[c.race]||[];
+  const isDB=c.race==='Dragonborn';
+  if(!traits.length&&!isDB) return '';
+  const cards=traits.map(t=>`
+    <div class="trait-card">
+      <div class="trait-name">${t.name}</div>
+      <div class="trait-note">${t.note}</div>
+    </div>`).join('');
+  let breathCard='';
+  if(isDB){
+    const anc=DRAGONBORN_ANCESTRY[c.ancestry||'Red'];
+    const L=c.level||1;
+    const n=L>=16?5:L>=11?4:L>=6?3:2;
+    const dc=8+mod(c.stats&&c.stats.con||10)+pb(L);
+    breathCard=`
+      <div class="trait-card">
+        <div class="trait-name">Breath Weapon</div>
+        <div class="trait-note">${n}d6 ${anc.type} · ${anc.save} save DC ${dc}</div>
+        <button class="breath-btn" onclick="rollBreath('${c.id}')">🔥 Breathe (${n}d6 ${anc.type})</button>
+        <div id="breathResult"></div>
+      </div>`;
+  }
+  return `<div class="traits-section">
+    <div class="section-label" style="margin-top:0">Race traits</div>
+    <div class="trait-list">${cards}${breathCard}</div>
+  </div>`;
+}
+
+async function rollBreath(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const L=c.level||1;
+  const n=L>=16?5:L>=11?4:L>=6?3:2;
+  const anc=DRAGONBORN_ANCESTRY[c.ancestry||'Red'];
+  let total=0; const rolls=[];
+  for(let i=0;i<n;i++){ const v=Math.floor(Math.random()*6)+1; rolls.push(v); total+=v; }
+  buzz(15);
+  const el=document.getElementById('breathResult');
+  if(el){ el.textContent=`${total} ${anc.type} (${rolls.join('+')})`; el.className='breath-result'; }
+}
+
+/* ================= SKILLS ================= */
+const SKILLS=[
+  {key:'acrobatics',   name:'Acrobatics',    ab:'dex'},
+  {key:'animal',       name:'Animal Handling',ab:'wis'},
+  {key:'arcana',       name:'Arcana',         ab:'int'},
+  {key:'athletics',    name:'Athletics',      ab:'str'},
+  {key:'deception',    name:'Deception',      ab:'cha'},
+  {key:'history',      name:'History',        ab:'int'},
+  {key:'insight',      name:'Insight',        ab:'wis'},
+  {key:'intimidation', name:'Intimidation',   ab:'cha'},
+  {key:'investigation',name:'Investigation',  ab:'int'},
+  {key:'medicine',     name:'Medicine',       ab:'wis'},
+  {key:'nature',       name:'Nature',         ab:'int'},
+  {key:'perception',   name:'Perception',     ab:'wis'},
+  {key:'performance',  name:'Performance',    ab:'cha'},
+  {key:'persuasion',   name:'Persuasion',     ab:'cha'},
+  {key:'religion',     name:'Religion',       ab:'int'},
+  {key:'sleight',      name:'Sleight of Hand',ab:'dex'},
+  {key:'stealth',      name:'Stealth',        ab:'dex'},
+  {key:'survival',     name:'Survival',       ab:'wis'},
+];
+
+function renderSkills(c){
+  const profs=c.skillProfs||[];
+  const profBonus=pb(c.level||1);
+  const items=SKILLS.map(sk=>{
+    const isPro=profs.includes(sk.key);
+    const bonus=mod(c.stats&&c.stats[sk.ab]||10)+(isPro?profBonus:0);
+    const bStr=bonus>=0?'+'+bonus:''+bonus;
+    return `<div class="skill-row${isPro?' prof':''}" onclick="toggleSkillProf('${c.id}','${sk.key}')">
+      <div class="skill-pip"></div>
+      <span class="skill-name">${sk.name}</span>
+      <span class="skill-ab">${sk.ab.toUpperCase()}</span>
+      <span class="skill-bonus">${bStr}</span>
+    </div>`;
+  }).join('');
+  return `<div class="skills-section">
+    <div class="section-label" style="margin-top:0">Skills</div>
+    <div class="skills-grid">${items}</div>
+  </div>`;
+}
+
+async function toggleSkillProf(id,key){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  if(!c.skillProfs) c.skillProfs=[];
+  const idx=c.skillProfs.indexOf(key);
+  if(idx>=0) c.skillProfs.splice(idx,1); else c.skillProfs.push(key);
+  await Store.save(chars); renderDetail(id);
 }
 
 /* ================= INITIATIVE ================= */
