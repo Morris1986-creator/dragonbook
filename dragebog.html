@@ -183,6 +183,8 @@
     background:rgba(201,162,75,.03);transition:.18s;
   }
   .add-card:active{background:rgba(201,162,75,.08)}
+  .random-card{border-color:rgba(95,168,130,.5);color:var(--emerald);background:rgba(95,168,130,.03)}
+  .random-card:active{background:rgba(95,168,130,.1)}
   .add-card .plus{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.2rem;line-height:1}
 
   .empty{
@@ -1172,6 +1174,58 @@ function go(view){
 function toggleLicense(){ const n=document.getElementById('licenseNote'); if(n) n.hidden=!n.hidden; }
 
 /* ---------------- home ---------------- */
+/* ---------------- random character ---------------- */
+const RANDOM_NAMES=[
+  'Aelric','Brynn','Caelum','Dara','Elowen','Faelan','Gwenith','Hadrian',
+  'Isolde','Jorah','Kael','Lyra','Mira','Nyx','Oryn','Petra',
+  'Quinn','Riven','Sable','Thorn','Ulric','Vex','Wren','Xan',
+  'Aldric','Branwen','Cedric','Dagny','Edric','Freya','Gareth','Hilda',
+  'Idris','Kira','Luca','Maren','Niamh','Oswin','Rook','Seren',
+  'Tavish','Valor','Wynne','Zara','Theron','Sylvara','Duskmore','Ashveil'
+];
+
+async function randomChar(){
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const roll4d6 = () => {
+    const d=[r(6),r(6),r(6),r(6)];
+    return d.reduce((s,v)=>s+v,0) - Math.min(...d);
+  };
+
+  const name    = pick(RANDOM_NAMES);
+  const race    = pick(RACES);
+  const klasse  = pick(CLASSES);
+  const level   = 1;
+  const stats   = {};
+  ABILITIES.forEach(a=>{ stats[a[0]]=roll4d6(); });
+
+  const hd      = CLASS_HIT_DIE[klasse]||8;
+  const conMod  = mod(stats.con);
+  const dexMod  = mod(stats.dex);
+  const maxHp   = Math.max(1, hd + conMod);
+  const ac      = 10 + dexMod;
+
+  const cm      = 155 + Math.floor(Math.random()*41);
+  const totalIn = Math.round(cm/2.54);
+  const height  = `${Math.floor(totalIn/12)}'${totalIn%12}" / ${cm} cm`;
+
+  const ancestry = race==='Dragonborn'
+    ? Object.keys(DRAGONBORN_ANCESTRY)[Math.floor(Math.random()*10)]
+    : null;
+
+  const c={
+    id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    name, race, klasse, level, stats, maxHp, hp:maxHp, ac,
+    height, ancestry, attacks:[], conditions:[], skillProfs:[], slotsUsed:{},
+    deathSaves:{s:0,f:0}, tempHp:0
+  };
+  chars.push(c);
+  await Store.save(chars);
+  buzz(15);
+  renderHome();
+  renderDetail(c.id);
+  go('detail');
+}
+
 const CRAFT_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
 const DICE_BTN_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg>`;
 const CHEV_ICON=`<svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>`;
@@ -1185,7 +1239,10 @@ function renderHome(){
         <div class="e-title">No heroes yet</div>
         Forge your first character — name, race, class, and ability scores.
       </div>
-      <div class="add-card" onclick="newChar()"><span class="plus">+</span> Create your first character</div>`;
+      <div class="add-card" onclick="newChar()"><span class="plus">+</span> Create your first character</div>
+      <div class="add-card random-card" onclick="randomChar()" style="margin-top:10px">
+        <span class="plus" style="font-size:1.3rem">🎲</span> Roll a random character
+      </div>`;
     document.getElementById('homeTools').innerHTML='';
     return;
   }
@@ -1200,7 +1257,11 @@ function renderHome(){
       </div>
       <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
     </div>`;
-  }).join('') + `<div class="add-card" onclick="newChar()"><span class="plus">+</span> New character</div>`;
+  }).join('') + `
+    <div style="display:flex;gap:10px;margin-top:0">
+      <div class="add-card" style="flex:1;margin-top:11px" onclick="newChar()"><span class="plus">+</span> New</div>
+      <div class="add-card random-card" style="flex:1;margin-top:11px" onclick="randomChar()"><span style="font-size:1.1rem">🎲</span> Random</div>
+    </div>`;
 
   document.getElementById('homeTools').innerHTML=`
     <div class="tools-divider"><span>Tools</span></div>
