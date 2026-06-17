@@ -808,6 +808,24 @@
 
 </div>
 
+<!-- ============ CHEAT PIN ============ -->
+<div class="modal" id="cheatPin">
+  <div class="combat-card" style="max-width:300px;text-align:center">
+    <div style="font-family:'Cinzel',serif;font-weight:800;font-size:1.1rem;letter-spacing:.12em;color:var(--gold-hi);margin-bottom:6px">🔒 Enter Code</div>
+    <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:18px">5-character code required</div>
+    <input id="cheatPinInput" type="password" maxlength="5" autocomplete="off" autocorrect="off" spellcheck="false"
+      style="width:100%;background:var(--bg2);border:1px solid var(--edge-gold);border-radius:12px;
+             color:var(--bone);font-family:'Space Mono',monospace;font-weight:700;font-size:1.6rem;
+             text-align:center;letter-spacing:.3em;padding:14px;outline:none;"
+      oninput="checkCheatPin(this)">
+    <div id="cheatPinErr" style="margin-top:10px;font-family:'Space Mono',monospace;font-size:.62rem;
+      color:var(--crimson);min-height:18px;letter-spacing:.06em"></div>
+    <button onclick="document.getElementById('cheatPin').classList.remove('open')"
+      style="margin-top:10px;background:none;border:none;color:var(--muted);font-family:'Space Mono',monospace;
+             font-size:.68rem;cursor:pointer;letter-spacing:.06em">Cancel</button>
+  </div>
+</div>
+
 <!-- ============ CHEAT MODAL ============ -->
 <div class="modal" id="cheatModal">
   <div class="combat-card" style="max-width:360px">
@@ -900,8 +918,30 @@ function r(n){
 function crestTap(){
   if(_crestTimer) clearTimeout(_crestTimer);
   _crestTaps++;
-  if(_crestTaps>=5){ _crestTaps=0; openCheatMenu(); return; }
+  if(_crestTaps>=5){
+    _crestTaps=0;
+    const inp=document.getElementById('cheatPinInput');
+    inp.value='';
+    document.getElementById('cheatPinErr').textContent='';
+    document.getElementById('cheatPin').classList.add('open');
+    setTimeout(()=>inp.focus(),120);
+    return;
+  }
   _crestTimer=setTimeout(()=>{ _crestTaps=0; },1400);
+}
+function checkCheatPin(el){
+  if(el.value.length<5) return;
+  if(el.value.toUpperCase()==='M1986'){
+    document.getElementById('cheatPin').classList.remove('open');
+    el.value='';
+    buzz(20);
+    openCheatMenu();
+  } else {
+    document.getElementById('cheatPinErr').textContent='Wrong code — try again';
+    el.style.borderColor='var(--crimson)';
+    buzz([60,40,60]);
+    setTimeout(()=>{ el.value=''; el.style.borderColor='var(--edge-gold)'; document.getElementById('cheatPinErr').textContent=''; },900);
+  }
 }
 function openCheatMenu(){
   buzz(30);
