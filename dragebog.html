@@ -482,11 +482,44 @@
   .hp-btn.rest{border-color:var(--edge-gold);color:var(--gold-hi)}
   .hp-amount{
     flex:1;background:var(--bg2);border:1px solid var(--gold);border-radius:10px;
-    color:var(--gold-hi);font-family:'Space Mono',monospace;font-weight:700;font-size:.88rem;
-    text-align:center;padding:0 4px;outline:none;cursor:pointer;
-    appearance:none;-webkit-appearance:none;
-    background-image:none;
+    color:var(--gold-hi);font-family:'Space Mono',monospace;font-weight:700;font-size:1rem;
+    text-align:center;padding:8px 4px;cursor:pointer;
   }
+  .hp-amount:active{background:rgba(201,162,75,.1)}
+
+  /* ---------- HP numpad ---------- */
+  .numpad-display{
+    font-family:'Space Mono',monospace;font-weight:700;font-size:2.8rem;
+    text-align:center;color:var(--bone);background:var(--bg2);border:1px solid var(--edge-gold);
+    border-radius:14px;padding:16px;margin-bottom:16px;min-height:76px;
+    letter-spacing:.05em;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .numpad-display.empty{color:var(--muted)}
+  .numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+  .npk{
+    background:var(--surface);border:1px solid var(--edge);border-radius:13px;
+    color:var(--bone);font-family:'Space Mono',monospace;font-weight:700;font-size:1.4rem;
+    padding:16px 0;cursor:pointer;text-align:center;transition:.08s;
+  }
+  .npk:active{background:var(--surface2);transform:scale(.94)}
+  .npk.wide{grid-column:span 2}
+  .npk.backspace{color:var(--muted);font-size:1.1rem}
+  .numpad-actions{display:flex;gap:10px}
+  .numpad-actions button{
+    flex:1;border-radius:13px;padding:14px;font-family:'Cinzel',serif;font-weight:700;
+    font-size:.92rem;letter-spacing:.05em;cursor:pointer;border:1px solid;
+  }
+  .numpad-actions button:active{transform:scale(.97)}
+  .np-dmg{border-color:var(--crimson);background:rgba(183,64,59,.15);color:#f2c9c7}
+  .np-heal{border-color:var(--emerald);background:rgba(95,168,130,.12);color:#cfeede}
+
+  /* ---------- Passive Perception ---------- */
+  .pp-strip{display:flex;align-items:center;gap:10px;margin-top:10px;
+    background:var(--surface);border:1px solid var(--edge);border-radius:13px;padding:10px 14px}
+  .pp-meta{flex:1}
+  .pp-lbl{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pp-sub{font-family:'Space Mono',monospace;font-size:.64rem;color:var(--muted);margin-top:2px}
+  .pp-val{font-family:'Cinzel',serif;font-weight:800;font-size:1.9rem;line-height:1;color:var(--bone);min-width:48px;text-align:center}
   .ac-block{width:86px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:var(--surface);border:1px solid var(--edge);border-radius:16px;padding:12px 8px;gap:4px}
   .ac-shield{position:relative;display:flex;align-items:center;justify-content:center}
@@ -910,6 +943,32 @@
     </div>
   </section>
 
+</div>
+
+<!-- ============ HP NUMPAD MODAL ============ -->
+<div class="modal" id="numpadModal">
+  <div class="combat-card" style="max-width:320px">
+    <button class="combat-close" onclick="closeNumpad()" aria-label="Close">×</button>
+    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:.9rem;letter-spacing:.1em;color:var(--muted);text-align:center;margin-bottom:12px" id="numpadTitle">Enter amount</div>
+    <div class="numpad-display empty" id="numpadDisplay">0</div>
+    <div class="numpad-grid">
+      <button class="npk" onclick="npKey('1')">1</button>
+      <button class="npk" onclick="npKey('2')">2</button>
+      <button class="npk" onclick="npKey('3')">3</button>
+      <button class="npk" onclick="npKey('4')">4</button>
+      <button class="npk" onclick="npKey('5')">5</button>
+      <button class="npk" onclick="npKey('6')">6</button>
+      <button class="npk" onclick="npKey('7')">7</button>
+      <button class="npk" onclick="npKey('8')">8</button>
+      <button class="npk" onclick="npKey('9')">9</button>
+      <button class="npk wide" onclick="npKey('0')">0</button>
+      <button class="npk backspace" onclick="npBack()">⌫</button>
+    </div>
+    <div class="numpad-actions">
+      <button class="np-dmg" onclick="npApply(-1)">− Damage</button>
+      <button class="np-heal" onclick="npApply(1)">+ Heal</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============ CONFIRM MODAL ============ -->
@@ -1437,6 +1496,7 @@ function renderDetail(id){
   const conds  = renderConditions(c);
   const traits = renderRaceTraits(c);
   const skills = renderSkills(c);
+  const pp     = renderPassivePerception(c);
   document.getElementById('detailBody').innerHTML=`
     <div class="sheet-crest">
       <div class="sheet-sigil">${icon(c.klasse)}</div>
@@ -1446,6 +1506,7 @@ function renderDetail(id){
     <div class="statblock">${sb}</div>
     ${traits}
     ${init}
+    ${pp}
     ${hpac}
     ${slots}
     ${conds}
@@ -1517,9 +1578,9 @@ function renderHpAc(c){
 
     const actionBtns = dying ? '' : `
       <div class="hp-btns">
-        <button class="hp-btn dmg" onclick="bumpHP('${c.id}',-1)">− Dmg</button>
-        <select class="hp-amount" id="hpAmt-${c.id}">${[1,2,3,4,5,6,7,8,9,10,12,14,15,16,18,20,25,30,40,50].map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
-        <button class="hp-btn heal" onclick="bumpHP('${c.id}',1)">+ Heal</button>
+        <button class="hp-btn dmg" onclick="openNumpad('${c.id}',-1)">− Dmg</button>
+        <button class="hp-amount" id="hpAmt-${c.id}" onclick="openNumpad('${c.id}',0)">1</button>
+        <button class="hp-btn heal" onclick="openNumpad('${c.id}',1)">+ Heal</button>
         <button class="hp-btn rest" onclick="restHP('${c.id}')">Rest</button>
       </div>
       <div class="temp-row">
@@ -1584,10 +1645,42 @@ function renderDeathSaves(c){
     </div>`;
 }
 
-async function bumpHP(id, direction){
+/* ---- HP numpad ---- */
+let _npCharId=null, _npDir=0, _npVal='';
+function openNumpad(id, dir){
+  _npCharId=id; _npDir=dir; _npVal='';
+  const disp=document.getElementById('numpadDisplay');
+  disp.textContent='0'; disp.classList.add('empty');
+  document.getElementById('numpadTitle').textContent=
+    dir<0?'How much damage?':dir>0?'How much healing?':'Enter amount';
+  document.getElementById('numpadModal').classList.add('open');
+}
+function closeNumpad(){ document.getElementById('numpadModal').classList.remove('open'); }
+function npKey(k){
+  if(_npVal.length>=3) return;
+  _npVal=(_npVal+k).replace(/^0+/,'') || '0';
+  const disp=document.getElementById('numpadDisplay');
+  disp.textContent=_npVal||'0';
+  disp.classList.toggle('empty',!_npVal);
+}
+function npBack(){
+  _npVal=_npVal.slice(0,-1);
+  const disp=document.getElementById('numpadDisplay');
+  disp.textContent=_npVal||'0';
+  disp.classList.toggle('empty',!_npVal);
+}
+async function npApply(dir){
+  const amount=Math.max(1,parseInt(_npVal)||1);
+  closeNumpad();
+  /* update the display button on the sheet */
+  const btn=document.getElementById('hpAmt-'+_npCharId);
+  if(btn) btn.textContent=amount;
+  await bumpHP(_npCharId, dir, amount);
+}
+
+async function bumpHP(id, direction, amount=1){
   const c=chars.find(x=>x.id===id); if(!c||c.maxHp==null) return;
-  const amtEl=document.getElementById('hpAmt-'+id);
-  const amount=Math.max(1,Math.min(999,parseInt(amtEl&&amtEl.value)||1));
+  /* amount is passed directly from numpad */
   const cur = c.hp!=null?c.hp:c.maxHp;
   if(direction<0){
     // burn temp HP first before real HP
@@ -1832,6 +1925,21 @@ async function toggleSkillProf(id,key){
   const idx=c.skillProfs.indexOf(key);
   if(idx>=0) c.skillProfs.splice(idx,1); else c.skillProfs.push(key);
   await Store.save(chars); renderDetail(id);
+}
+
+/* ================= PASSIVE PERCEPTION ================= */
+function renderPassivePerception(c){
+  const wisMod = mod((c.stats&&c.stats.wis)||10);
+  const profBonus = (c.skillProfs||[]).includes('perception') ? pb(c.level||1) : 0;
+  const pp = 10 + wisMod + profBonus;
+  const profNote = profBonus ? ` · +${profBonus} prof` : '';
+  return `<div class="pp-strip">
+    <div class="pp-meta">
+      <div class="pp-lbl">Passive Perception</div>
+      <div class="pp-sub">10 + WIS ${modStr((c.stats&&c.stats.wis)||10)}${profNote}</div>
+    </div>
+    <div class="pp-val">${pp}</div>
+  </div>`;
 }
 
 /* ================= INITIATIVE ================= */
