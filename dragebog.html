@@ -537,22 +537,47 @@
   .notes-saved{font-size:.7rem;color:var(--muted);text-align:right;margin-top:4px;min-height:14px;transition:opacity .4s}
 
   /* ---------- Inventory ---------- */
-  .inv-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(74,43,48,.5)}
+  .inv-summary-btn{width:100%;display:flex;align-items:center;gap:10px;margin-top:14px;
+    background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:12px 14px;cursor:pointer}
+  .inv-summary-icon{font-size:1.3rem}
+  .inv-summary-text{flex:1;text-align:left}
+  .inv-summary-title{font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;color:var(--bone)}
+  .inv-summary-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+  /* currency */
+  .currency-row{display:flex;gap:10px;margin-bottom:18px}
+  .currency-block{flex:1;background:var(--surface);border:1px solid var(--edge);border-radius:14px;
+    padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .currency-icon{font-size:1.4rem;line-height:1}
+  .currency-val{font-family:'Cinzel',serif;font-weight:800;font-size:1.5rem;color:var(--bone);line-height:1}
+  .currency-lbl{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .currency-btns{display:flex;gap:4px}
+  .currency-btns button{padding:3px 10px;border-radius:8px;border:1px solid var(--edge);
+    background:transparent;color:var(--bone);font-size:.95rem;cursor:pointer}
+  /* quick-add */
+  .qacat{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:14px 0 6px}
+  .qa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:4px}
+  .qa-btn{padding:8px 10px;border-radius:10px;border:1px solid var(--edge);background:var(--surface);
+    color:var(--bone);font-size:.82rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+  .qa-btn:active{background:rgba(201,162,75,.1);border-color:var(--gold)}
+  .qa-lbs{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted)}
+  /* inv list */
+  .inv-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(74,43,48,.5)}
   .inv-row:last-child{border-bottom:none}
   .inv-name{flex:1;font-size:.92rem;color:var(--bone)}
   .inv-qty{font-family:'Space Mono',monospace;font-size:.82rem;color:var(--gold);min-width:28px;text-align:center}
   .inv-stepper{display:flex;align-items:center;gap:4px}
-  .inv-stepper button{width:26px;height:26px;border-radius:8px;border:1px solid var(--edge);
-    background:var(--surface);color:var(--bone);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .inv-del{width:26px;height:26px;border-radius:8px;border:1px solid rgba(183,64,59,.4);
+  .inv-stepper button{width:28px;height:28px;border-radius:8px;border:1px solid var(--edge);
+    background:var(--surface);color:var(--bone);font-size:1rem;cursor:pointer}
+  .inv-del{width:28px;height:28px;border-radius:8px;border:1px solid rgba(183,64,59,.4);
     background:rgba(183,64,59,.1);color:var(--crimson);font-size:.9rem;cursor:pointer;margin-left:4px}
-  .inv-add{display:flex;gap:8px;margin-top:10px}
+  .inv-add{display:flex;gap:8px;margin-top:12px}
   .inv-add input{flex:1;background:var(--surface);border:1px solid var(--edge);border-radius:10px;
-    padding:9px 12px;color:var(--bone);font-family:'Sora',sans-serif;font-size:.9rem}
+    padding:10px 12px;color:var(--bone);font-family:'Sora',sans-serif;font-size:.9rem}
   .inv-add input:focus{outline:none;border-color:var(--gold)}
-  .inv-add button{padding:9px 14px;border-radius:10px;border:1px solid var(--gold);
-    background:rgba(201,162,75,.15);color:var(--gold);font-family:'Space Mono',monospace;font-size:.78rem;cursor:pointer;white-space:nowrap}
-  .carry-bar-wrap{margin-top:6px}
+  .inv-add button{padding:10px 14px;border-radius:10px;border:1px solid var(--gold);
+    background:rgba(201,162,75,.15);color:var(--gold);font-family:'Space Mono',monospace;font-size:.78rem;cursor:pointer}
+  .carry-bar-wrap{margin-top:10px}
   .carry-label{font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:3px}
   .carry-bar{height:5px;background:var(--edge);border-radius:3px;overflow:hidden}
   .carry-fill{height:100%;border-radius:3px;background:var(--emerald);transition:width .3s}
@@ -997,6 +1022,65 @@
     <div class="save-bar">
       <button class="btn-primary" onclick="saveCraftWeapon()">Save weapon</button>
       <button class="btn-ghost danger" id="cw-delete" style="display:none" onclick="deleteCraftWeapon()">Delete</button>
+    </div>
+  </section>
+
+  <!-- ============ INVENTORY ============ -->
+  <section class="view" id="view-inventory">
+    <div class="topbar">
+      <button class="iconbtn" onclick="go('detail')" aria-label="Back">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 16l-6-6 6-6"/></svg>
+      </button>
+      <h1 id="invViewTitle">Inventory</h1>
+    </div>
+
+    <!-- Currency -->
+    <div class="section-label">Valuta</div>
+    <div class="currency-row">
+      <div class="currency-block">
+        <div class="currency-icon">🟡</div>
+        <div class="currency-val" id="inv-gp">0</div>
+        <div class="currency-lbl">Guld (GP)</div>
+        <div class="currency-btns">
+          <button onclick="bumpCurrency('gp',-1)">−</button>
+          <button onclick="bumpCurrency('gp',1)">+</button>
+        </div>
+      </div>
+      <div class="currency-block">
+        <div class="currency-icon">⚪</div>
+        <div class="currency-val" id="inv-sp">0</div>
+        <div class="currency-lbl">Sølv (SP)</div>
+        <div class="currency-btns">
+          <button onclick="bumpCurrency('sp',-1)">−</button>
+          <button onclick="bumpCurrency('sp',1)">+</button>
+        </div>
+      </div>
+      <div class="currency-block">
+        <div class="currency-icon">🟤</div>
+        <div class="currency-val" id="inv-cp">0</div>
+        <div class="currency-lbl">Kobber (CP)</div>
+        <div class="currency-btns">
+          <button onclick="bumpCurrency('cp',-1)">−</button>
+          <button onclick="bumpCurrency('cp',1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick add -->
+    <div class="section-label">Hurtig tilføj</div>
+    <div id="invQuickAdd"></div>
+
+    <!-- Item list -->
+    <div class="section-label" style="margin-top:18px">Dine genstande</div>
+    <div id="invItemList"></div>
+    <div class="carry-bar-wrap">
+      <div class="carry-label" id="invCarryLabel"></div>
+      <div class="carry-bar"><div class="carry-fill" id="invCarryFill"></div></div>
+    </div>
+    <div class="inv-add">
+      <input id="invCustomInput" type="text" placeholder="Custom genstand…" autocomplete="off"
+        onkeydown="if(event.key==='Enter')invAddCustom()">
+      <button onclick="invAddCustom()">+ Tilføj</button>
     </div>
   </section>
 
@@ -1509,77 +1593,135 @@ async function saveNotes(id){
 }
 
 /* ================= INVENTORY ================= */
+const QUICK_ITEMS=[
+  {cat:'Eventyr-udstyr', items:[
+    {name:'Rygsæk',lbs:5},{name:'Tælleprærie (1 dag)',lbs:2},{name:'Vandskind',lbs:5},
+    {name:'Fakkel',lbs:1},{name:'Tændstål',lbs:1},{name:'Reb (15 m)',lbs:10},
+    {name:'Telt',lbs:20},{name:'Sovepose',lbs:7},{name:'Klemme',lbs:5},
+    {name:'Hammer',lbs:3},{name:'Piton (x10)',lbs:5},{name:'Laterne',lbs:2},
+    {name:'Olie (flaske)',lbs:1},{name:'Kæder',lbs:6},{name:'Spejl',lbs:0.5},
+  ]},
+  {cat:'Helbreds & magi', items:[
+    {name:'Helbredelsesdrik',lbs:0.5},{name:'Antitoksin',lbs:0},
+    {name:'Healers kit',lbs:3},{name:'Urtekasse',lbs:3},
+  ]},
+  {cat:'Tyveredskaber & andet', items:[
+    {name:'Tyveværktøj',lbs:1},{name:'Forklædning',lbs:3},
+    {name:'Spillekort',lbs:0},{name:'Terninger',lbs:0},
+    {name:'Kort (blank)',lbs:0},{name:'Blæk & fjer',lbs:0},
+  ]},
+];
+
+let _invCharId=null;
+
 function renderInventory(c){
   const items=c.inventory||[];
-  const strScore=(c.stats&&c.stats.str)||10;
-  const cap=strScore*15;
-  const totalLbs=items.reduce((s,i)=>s+(i.lbs||0)*i.qty,0);
-  const pct=Math.min(100,Math.round(totalLbs/cap*100));
-  const rows=items.map((item,idx)=>`
-    <div class="inv-row">
-      <div class="inv-name">${esc(item.name)}</div>
-      <div class="inv-stepper">
-        <button onclick="invBump('${c.id}',${idx},-1)">−</button>
-        <div class="inv-qty">${item.qty}</div>
-        <button onclick="invBump('${c.id}',${idx},1)">+</button>
-      </div>
-      <button class="inv-del" onclick="invRemove('${c.id}',${idx})">×</button>
-    </div>`).join('');
-  return `<div class="section-label" style="margin-top:26px">Udstyr &amp; inventory</div>
-    <div id="invList-${c.id}">${rows||'<div class="empty" style="padding:12px 0 4px;font-size:.84rem">Ingen genstande endnu.</div>'}</div>
-    <div class="carry-bar-wrap">
-      <div class="carry-label">Bærekapacitet: ${totalLbs} / ${cap} lbs (STR ${strScore} × 15)</div>
-      <div class="carry-bar"><div class="carry-fill${pct>80?' heavy':''}" style="width:${pct}%"></div></div>
+  const cur=c.currency||{gp:0,sp:0,cp:0};
+  const totalItems=items.reduce((s,i)=>s+i.qty,0);
+  const gp=cur.gp||0, sp=cur.sp||0, cp=cur.cp||0;
+  const currencyStr=[gp?gp+'gp':'',sp?sp+'sp':'',cp?cp+'cp':''].filter(Boolean).join(' · ')||'Ingen valuta';
+  return `<button class="inv-summary-btn" onclick="openInventory('${c.id}')">
+    <div class="inv-summary-icon">🎒</div>
+    <div class="inv-summary-text">
+      <div class="inv-summary-title">Inventory${totalItems?' ('+totalItems+' genstande)':''}</div>
+      <div class="inv-summary-sub">${currencyStr}</div>
     </div>
-    <div class="inv-add">
-      <input id="invInput-${c.id}" type="text" placeholder="Tilføj genstand…" autocomplete="off"
-        onkeydown="if(event.key==='Enter')invAdd('${c.id}')">
-      <button onclick="invAdd('${c.id}')">+ Tilføj</button>
-    </div>`;
+    <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
+  </button>`;
 }
-async function invAdd(id){
+
+function openInventory(id){
+  _invCharId=id;
   const c=chars.find(x=>x.id===id); if(!c) return;
-  const inp=document.getElementById('invInput-'+id); if(!inp||!inp.value.trim()) return;
-  if(!c.inventory) c.inventory=[];
-  c.inventory.push({name:inp.value.trim(), qty:1, lbs:0});
-  inp.value='';
-  await Store.save(chars);
-  refreshInventory(id);
+  document.getElementById('invViewTitle').textContent=esc(c.name)+' — Inventory';
+  renderInvView();
+  go('inventory');
 }
-async function invBump(id,idx,d){
-  const c=chars.find(x=>x.id===id); if(!c||!c.inventory) return;
-  c.inventory[idx].qty=Math.max(1,c.inventory[idx].qty+d);
-  await Store.save(chars);
-  refreshInventory(id);
+
+function renderInvView(){
+  const c=chars.find(x=>x.id===_invCharId); if(!c) return;
+  const cur=c.currency||{gp:0,sp:0,cp:0};
+  document.getElementById('inv-gp').textContent=cur.gp||0;
+  document.getElementById('inv-sp').textContent=cur.sp||0;
+  document.getElementById('inv-cp').textContent=cur.cp||0;
+
+  // quick-add grid
+  const qaEl=document.getElementById('invQuickAdd');
+  qaEl.innerHTML=QUICK_ITEMS.map(cat=>`
+    <div class="qacat">${cat.cat}</div>
+    <div class="qa-grid">${cat.items.map(it=>`
+      <button class="qa-btn" onclick="invQuickAdd(${JSON.stringify(it.name)},${it.lbs})">
+        ${esc(it.name)}<span class="qa-lbs">${it.lbs?it.lbs+'lb':''}</span>
+      </button>`).join('')}
+    </div>`).join('');
+
+  renderInvList();
 }
-async function invRemove(id,idx){
-  const c=chars.find(x=>x.id===id); if(!c||!c.inventory) return;
-  c.inventory.splice(idx,1);
-  await Store.save(chars);
-  refreshInventory(id);
-}
-function refreshInventory(id){
-  const c=chars.find(x=>x.id===id); if(!c) return;
-  const wrap=document.getElementById('invList-'+id); if(!wrap) return;
+
+function renderInvList(){
+  const c=chars.find(x=>x.id===_invCharId); if(!c) return;
   const items=c.inventory||[];
   const strScore=(c.stats&&c.stats.str)||10;
   const cap=strScore*15;
   const totalLbs=items.reduce((s,i)=>s+(i.lbs||0)*i.qty,0);
   const pct=Math.min(100,Math.round(totalLbs/cap*100));
-  wrap.innerHTML=items.map((item,idx)=>`
-    <div class="inv-row">
-      <div class="inv-name">${esc(item.name)}</div>
-      <div class="inv-stepper">
-        <button onclick="invBump('${c.id}',${idx},-1)">−</button>
-        <div class="inv-qty">${item.qty}</div>
-        <button onclick="invBump('${c.id}',${idx},1)">+</button>
-      </div>
-      <button class="inv-del" onclick="invRemove('${c.id}',${idx})">×</button>
-    </div>`).join('')||'<div class="empty" style="padding:12px 0 4px;font-size:.84rem">Ingen genstande endnu.</div>';
-  const lbl=wrap.parentElement&&wrap.parentElement.querySelector('.carry-label');
-  if(lbl) lbl.textContent=`Bærekapacitet: ${totalLbs} / ${cap} lbs (STR ${strScore} × 15)`;
-  const fill=wrap.parentElement&&wrap.parentElement.querySelector('.carry-fill');
-  if(fill){ fill.style.width=pct+'%'; fill.classList.toggle('heavy',pct>80); }
+  document.getElementById('invItemList').innerHTML=items.length
+    ? items.map((item,idx)=>`
+        <div class="inv-row">
+          <div class="inv-name">${esc(item.name)}</div>
+          <div class="inv-stepper">
+            <button onclick="invBump(${idx},-1)">−</button>
+            <div class="inv-qty">${item.qty}</div>
+            <button onclick="invBump(${idx},1)">+</button>
+          </div>
+          <button class="inv-del" onclick="invRemove(${idx})">×</button>
+        </div>`).join('')
+    : '<div class="empty" style="padding:14px 0 4px;font-size:.84rem">Ingen genstande endnu.</div>';
+  document.getElementById('invCarryLabel').textContent=`Bærekapacitet: ${totalLbs} / ${cap} lbs (STR ${strScore} × 15)`;
+  const fill=document.getElementById('invCarryFill');
+  fill.style.width=pct+'%'; fill.classList.toggle('heavy',pct>80);
+}
+
+async function bumpCurrency(type,d){
+  const c=chars.find(x=>x.id===_invCharId); if(!c) return;
+  if(!c.currency) c.currency={gp:0,sp:0,cp:0};
+  c.currency[type]=Math.max(0,(c.currency[type]||0)+d);
+  await Store.save(chars);
+  document.getElementById('inv-'+type).textContent=c.currency[type];
+}
+
+async function invQuickAdd(name,lbs){
+  const c=chars.find(x=>x.id===_invCharId); if(!c) return;
+  if(!c.inventory) c.inventory=[];
+  const existing=c.inventory.find(i=>i.name===name);
+  if(existing) existing.qty++;
+  else c.inventory.push({name,qty:1,lbs});
+  await Store.save(chars); buzz(8);
+  renderInvList();
+}
+
+async function invAddCustom(){
+  const inp=document.getElementById('invCustomInput'); if(!inp||!inp.value.trim()) return;
+  const c=chars.find(x=>x.id===_invCharId); if(!c) return;
+  if(!c.inventory) c.inventory=[];
+  c.inventory.push({name:inp.value.trim(),qty:1,lbs:0});
+  inp.value='';
+  await Store.save(chars);
+  renderInvList();
+}
+
+async function invBump(idx,d){
+  const c=chars.find(x=>x.id===_invCharId); if(!c||!c.inventory) return;
+  c.inventory[idx].qty=Math.max(1,c.inventory[idx].qty+d);
+  await Store.save(chars);
+  renderInvList();
+}
+
+async function invRemove(idx){
+  const c=chars.find(x=>x.id===_invCharId); if(!c||!c.inventory) return;
+  c.inventory.splice(idx,1);
+  await Store.save(chars);
+  renderInvList();
 }
 
 /* ================= ENCOUNTER TRACKER ================= */
@@ -1726,6 +1868,7 @@ async function handleImport(e){
       combos: (Array.isArray(a.combos)?a.combos:[]).map(co=>({key:clampStr(co.key,40),on:!!co.on,undead:!!co.undead}))
     })),
     notes: clampStr(c.notes, 5000),
+    currency: {gp:clampInt((c.currency||{}).gp,0,99999),sp:clampInt((c.currency||{}).sp,0,99999),cp:clampInt((c.currency||{}).cp,0,99999)},
     inventory: (Array.isArray(c.inventory)?c.inventory:[]).map(i=>({
       name: clampStr(i.name), qty: clampInt(i.qty,1,999), lbs: clampInt(i.lbs,0,999)
     }))
