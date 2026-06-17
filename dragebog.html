@@ -529,6 +529,66 @@
   .lu-confirm{width:100%;padding:13px;border-radius:14px;border:1.5px solid var(--emerald);
     background:rgba(95,168,130,.15);color:#cfeede;font-family:'Cinzel',serif;font-size:1rem;font-weight:700;cursor:pointer;margin-top:6px}
 
+  /* ---------- Notes ---------- */
+  .notes-area{width:100%;min-height:110px;background:var(--surface);border:1px solid var(--edge);
+    border-radius:13px;padding:12px 14px;color:var(--bone);font-family:'Sora',sans-serif;font-size:.9rem;
+    line-height:1.55;resize:vertical;box-sizing:border-box;margin-top:8px}
+  .notes-area:focus{outline:none;border-color:var(--gold)}
+  .notes-saved{font-size:.7rem;color:var(--muted);text-align:right;margin-top:4px;min-height:14px;transition:opacity .4s}
+
+  /* ---------- Inventory ---------- */
+  .inv-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(74,43,48,.5)}
+  .inv-row:last-child{border-bottom:none}
+  .inv-name{flex:1;font-size:.92rem;color:var(--bone)}
+  .inv-qty{font-family:'Space Mono',monospace;font-size:.82rem;color:var(--gold);min-width:28px;text-align:center}
+  .inv-stepper{display:flex;align-items:center;gap:4px}
+  .inv-stepper button{width:26px;height:26px;border-radius:8px;border:1px solid var(--edge);
+    background:var(--surface);color:var(--bone);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .inv-del{width:26px;height:26px;border-radius:8px;border:1px solid rgba(183,64,59,.4);
+    background:rgba(183,64,59,.1);color:var(--crimson);font-size:.9rem;cursor:pointer;margin-left:4px}
+  .inv-add{display:flex;gap:8px;margin-top:10px}
+  .inv-add input{flex:1;background:var(--surface);border:1px solid var(--edge);border-radius:10px;
+    padding:9px 12px;color:var(--bone);font-family:'Sora',sans-serif;font-size:.9rem}
+  .inv-add input:focus{outline:none;border-color:var(--gold)}
+  .inv-add button{padding:9px 14px;border-radius:10px;border:1px solid var(--gold);
+    background:rgba(201,162,75,.15);color:var(--gold);font-family:'Space Mono',monospace;font-size:.78rem;cursor:pointer;white-space:nowrap}
+  .carry-bar-wrap{margin-top:6px}
+  .carry-label{font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:3px}
+  .carry-bar{height:5px;background:var(--edge);border-radius:3px;overflow:hidden}
+  .carry-fill{height:100%;border-radius:3px;background:var(--emerald);transition:width .3s}
+  .carry-fill.heavy{background:var(--crimson)}
+
+  /* ---------- Encounter Tracker ---------- */
+  .enc-topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .enc-round{font-family:'Cinzel',serif;font-size:.8rem;color:var(--muted);margin-left:auto}
+  .enc-card{background:var(--surface);border:1px solid var(--edge);border-radius:14px;
+    padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px;transition:border-color .2s}
+  .enc-card.active-turn{border-color:var(--gold);background:rgba(201,162,75,.08)}
+  .enc-card.dead{opacity:.45}
+  .enc-init{font-family:'Cinzel',serif;font-weight:800;font-size:1.4rem;color:var(--bone);min-width:36px;text-align:center}
+  .enc-info{flex:1;min-width:0}
+  .enc-name{font-weight:600;font-size:.95rem;color:var(--bone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .enc-hp-row{display:flex;align-items:center;gap:6px;margin-top:3px}
+  .enc-hp{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--gold)}
+  .enc-hp.low{color:var(--crimson)}
+  .enc-conds{font-size:.72rem;color:var(--muted);margin-top:2px}
+  .enc-actions{display:flex;gap:5px}
+  .enc-btn{width:30px;height:30px;border-radius:9px;border:1px solid var(--edge);background:transparent;
+    color:var(--bone);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .enc-btn.dmg{border-color:rgba(183,64,59,.5);color:var(--crimson)}
+  .enc-btn.heal{border-color:rgba(95,168,130,.5);color:var(--emerald)}
+  .enc-btn.kill{border-color:rgba(183,64,59,.3);color:rgba(183,64,59,.6)}
+  .enc-add-form{background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:14px;margin-bottom:12px}
+  .enc-add-form .field{margin-bottom:10px}
+  .enc-add-form label{font-size:.72rem}
+  .enc-controls{display:flex;gap:8px;margin-bottom:14px}
+  .enc-next{flex:1;padding:12px;border-radius:14px;border:1.5px solid var(--gold);
+    background:rgba(201,162,75,.15);color:var(--gold-hi);font-family:'Cinzel',serif;font-weight:700;font-size:1rem;cursor:pointer}
+  .enc-next:disabled{opacity:.35;cursor:default}
+  .enc-reset{padding:12px 16px;border-radius:14px;border:1px solid var(--edge);
+    background:transparent;color:var(--muted);font-size:.82rem;cursor:pointer}
+  .ENCOUNTER_ICON svg{width:20px;height:20px}
+
   /* ---------- Passive Perception ---------- */
   .pp-strip{display:flex;align-items:center;gap:10px;margin-top:10px;
     background:var(--surface);border:1px solid var(--edge);border-radius:13px;padding:10px 14px}
@@ -938,6 +998,43 @@
       <button class="btn-primary" onclick="saveCraftWeapon()">Save weapon</button>
       <button class="btn-ghost danger" id="cw-delete" style="display:none" onclick="deleteCraftWeapon()">Delete</button>
     </div>
+  </section>
+
+  <!-- ============ ENCOUNTER TRACKER ============ -->
+  <section class="view" id="view-encounter">
+    <div class="topbar">
+      <button class="iconbtn" onclick="go('home')" aria-label="Back">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 16l-6-6 6-6"/></svg>
+      </button>
+      <h1>Encounter</h1>
+      <span class="enc-round">Runde 1</span>
+      <button class="iconbtn" onclick="toggleEncAddForm()" aria-label="Add participant" id="encAddBtn">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+
+    <div class="enc-add-form" id="encAddForm" style="display:none">
+      <div class="field">
+        <label>Navn</label>
+        <input id="enc-name" type="text" placeholder="Goblin, Troll, Gandalf…" autocomplete="off">
+      </div>
+      <div style="display:flex;gap:10px">
+        <div class="field" style="flex:1"><label>Initiative</label><input id="enc-init" type="number" placeholder="12" min="1" max="30"></div>
+        <div class="field" style="flex:1"><label>HP</label><input id="enc-hp" type="number" placeholder="20" min="0" max="999"></div>
+        <div class="field" style="flex:1"><label>AC</label><input id="enc-ac" type="number" placeholder="12" min="0" max="30"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn-primary" style="flex:1" onclick="encAddParticipant()">Tilføj</button>
+        <button class="btn-ghost" onclick="toggleEncAddForm()">Annuller</button>
+      </div>
+    </div>
+
+    <div class="enc-controls">
+      <button class="enc-next" id="encNextBtn" onclick="encNextTurn()">▶ Næste tur</button>
+      <button class="enc-reset" onclick="encReset()">↺ Nulstil</button>
+    </div>
+
+    <div id="encList"></div>
   </section>
 
   <!-- ============ DICE APPEARANCE ============ -->
@@ -1386,6 +1483,200 @@ async function applyLevelUp(useSuggested){
   renderDetail(_luCharId);
 }
 
+/* ================= NOTES ================= */
+function renderNotes(c){
+  const val = esc(c.notes||'');
+  return `<div class="section-label" style="margin-top:26px">Notater</div>
+    <textarea class="notes-area" id="notesArea-${c.id}"
+      placeholder="Backstory, kampagne-noter, DM-info…"
+      onblur="saveNotes('${c.id}')"
+      oninput="notesChanged('${c.id}')">${val}</textarea>
+    <div class="notes-saved" id="notesSaved-${c.id}"></div>`;
+}
+let _notesSaveTimer=null;
+function notesChanged(id){
+  clearTimeout(_notesSaveTimer);
+  _notesSaveTimer=setTimeout(()=>saveNotes(id), 1200);
+}
+async function saveNotes(id){
+  clearTimeout(_notesSaveTimer);
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const el=document.getElementById('notesArea-'+id); if(!el) return;
+  c.notes=el.value;
+  await Store.save(chars);
+  const saved=document.getElementById('notesSaved-'+id);
+  if(saved){ saved.textContent='Gemt ✓'; setTimeout(()=>{ if(saved) saved.textContent=''; },1800); }
+}
+
+/* ================= INVENTORY ================= */
+function renderInventory(c){
+  const items=c.inventory||[];
+  const strScore=(c.stats&&c.stats.str)||10;
+  const cap=strScore*15;
+  const totalLbs=items.reduce((s,i)=>s+(i.lbs||0)*i.qty,0);
+  const pct=Math.min(100,Math.round(totalLbs/cap*100));
+  const rows=items.map((item,idx)=>`
+    <div class="inv-row">
+      <div class="inv-name">${esc(item.name)}</div>
+      <div class="inv-stepper">
+        <button onclick="invBump('${c.id}',${idx},-1)">−</button>
+        <div class="inv-qty">${item.qty}</div>
+        <button onclick="invBump('${c.id}',${idx},1)">+</button>
+      </div>
+      <button class="inv-del" onclick="invRemove('${c.id}',${idx})">×</button>
+    </div>`).join('');
+  return `<div class="section-label" style="margin-top:26px">Udstyr &amp; inventory</div>
+    <div id="invList-${c.id}">${rows||'<div class="empty" style="padding:12px 0 4px;font-size:.84rem">Ingen genstande endnu.</div>'}</div>
+    <div class="carry-bar-wrap">
+      <div class="carry-label">Bærekapacitet: ${totalLbs} / ${cap} lbs (STR ${strScore} × 15)</div>
+      <div class="carry-bar"><div class="carry-fill${pct>80?' heavy':''}" style="width:${pct}%"></div></div>
+    </div>
+    <div class="inv-add">
+      <input id="invInput-${c.id}" type="text" placeholder="Tilføj genstand…" autocomplete="off"
+        onkeydown="if(event.key==='Enter')invAdd('${c.id}')">
+      <button onclick="invAdd('${c.id}')">+ Tilføj</button>
+    </div>`;
+}
+async function invAdd(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const inp=document.getElementById('invInput-'+id); if(!inp||!inp.value.trim()) return;
+  if(!c.inventory) c.inventory=[];
+  c.inventory.push({name:inp.value.trim(), qty:1, lbs:0});
+  inp.value='';
+  await Store.save(chars);
+  refreshInventory(id);
+}
+async function invBump(id,idx,d){
+  const c=chars.find(x=>x.id===id); if(!c||!c.inventory) return;
+  c.inventory[idx].qty=Math.max(1,c.inventory[idx].qty+d);
+  await Store.save(chars);
+  refreshInventory(id);
+}
+async function invRemove(id,idx){
+  const c=chars.find(x=>x.id===id); if(!c||!c.inventory) return;
+  c.inventory.splice(idx,1);
+  await Store.save(chars);
+  refreshInventory(id);
+}
+function refreshInventory(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const wrap=document.getElementById('invList-'+id); if(!wrap) return;
+  const items=c.inventory||[];
+  const strScore=(c.stats&&c.stats.str)||10;
+  const cap=strScore*15;
+  const totalLbs=items.reduce((s,i)=>s+(i.lbs||0)*i.qty,0);
+  const pct=Math.min(100,Math.round(totalLbs/cap*100));
+  wrap.innerHTML=items.map((item,idx)=>`
+    <div class="inv-row">
+      <div class="inv-name">${esc(item.name)}</div>
+      <div class="inv-stepper">
+        <button onclick="invBump('${c.id}',${idx},-1)">−</button>
+        <div class="inv-qty">${item.qty}</div>
+        <button onclick="invBump('${c.id}',${idx},1)">+</button>
+      </div>
+      <button class="inv-del" onclick="invRemove('${c.id}',${idx})">×</button>
+    </div>`).join('')||'<div class="empty" style="padding:12px 0 4px;font-size:.84rem">Ingen genstande endnu.</div>';
+  const lbl=wrap.parentElement&&wrap.parentElement.querySelector('.carry-label');
+  if(lbl) lbl.textContent=`Bærekapacitet: ${totalLbs} / ${cap} lbs (STR ${strScore} × 15)`;
+  const fill=wrap.parentElement&&wrap.parentElement.querySelector('.carry-fill');
+  if(fill){ fill.style.width=pct+'%'; fill.classList.toggle('heavy',pct>80); }
+}
+
+/* ================= ENCOUNTER TRACKER ================= */
+let encounter={ participants:[], turn:0, round:1 };
+
+function openEncounter(){ renderEncounter(); go('encounter'); }
+
+function toggleEncAddForm(){
+  const f=document.getElementById('encAddForm');
+  const open=f.style.display==='none'||!f.style.display;
+  f.style.display=open?'block':'none';
+  if(open) document.getElementById('enc-name').focus();
+}
+
+function encAddParticipant(){
+  const name=document.getElementById('enc-name').value.trim(); if(!name) return;
+  const init=parseInt(document.getElementById('enc-init').value)||0;
+  const hp=parseInt(document.getElementById('enc-hp').value)||0;
+  const ac=parseInt(document.getElementById('enc-ac').value)||0;
+  encounter.participants.push({name,init,hp,maxHp:hp,ac,id:'e'+Date.now().toString(36)});
+  encounter.participants.sort((a,b)=>b.init-a.init);
+  document.getElementById('enc-name').value='';
+  document.getElementById('enc-init').value='';
+  document.getElementById('enc-hp').value='';
+  document.getElementById('enc-ac').value='';
+  toggleEncAddForm();
+  renderEncounter();
+}
+
+function encNextTurn(){
+  const alive=encounter.participants.filter(p=>p.hp>0);
+  if(!alive.length) return;
+  encounter.turn++;
+  if(encounter.turn>=encounter.participants.length){
+    encounter.turn=0; encounter.round++;
+  }
+  while(encounter.participants[encounter.turn]&&encounter.participants[encounter.turn].hp<=0){
+    encounter.turn++;
+    if(encounter.turn>=encounter.participants.length){ encounter.turn=0; encounter.round++; }
+  }
+  buzz(10); renderEncounter();
+}
+
+function encReset(){
+  encounter={ participants:[], turn:0, round:1 };
+  renderEncounter();
+}
+
+function encBumpHp(idx,d){
+  const p=encounter.participants[idx]; if(!p) return;
+  p.hp=Math.max(0,Math.min(p.maxHp||999, p.hp+d));
+  renderEncounter();
+}
+
+function encKill(idx){
+  const p=encounter.participants[idx]; if(!p) return;
+  p.hp=0; renderEncounter();
+}
+
+function encRemove(idx){
+  encounter.participants.splice(idx,1);
+  if(encounter.turn>=encounter.participants.length) encounter.turn=0;
+  renderEncounter();
+}
+
+function renderEncounter(){
+  const list=document.getElementById('encList'); if(!list) return;
+  const roundEl=document.querySelector('.enc-round');
+  if(roundEl) roundEl.textContent='Runde '+encounter.round;
+  if(!encounter.participants.length){
+    list.innerHTML=`<div class="empty" style="padding:24px 0"><div class="e-title">Ingen deltagere</div>Tryk + for at tilføje spillere og modstandere.</div>`;
+    return;
+  }
+  list.innerHTML=encounter.participants.map((p,i)=>{
+    const isActive=i===encounter.turn;
+    const dead=p.hp<=0;
+    const hpPct=p.maxHp?Math.round(p.hp/p.maxHp*100):100;
+    const hpCls=hpPct<=25?'low':'';
+    return `<div class="enc-card${isActive?' active-turn':''}${dead?' dead':''}">
+      <div class="enc-init">${p.init}</div>
+      <div class="enc-info">
+        <div class="enc-name">${esc(p.name)}${p.ac?' · AC '+p.ac:''}</div>
+        <div class="enc-hp-row">
+          <span class="enc-hp ${hpCls}">${p.hp}${p.maxHp?' / '+p.maxHp:''} HP</span>
+        </div>
+      </div>
+      <div class="enc-actions">
+        <button class="enc-btn dmg" onclick="encBumpHp(${i},-1)" title="Skade">−</button>
+        <button class="enc-btn heal" onclick="encBumpHp(${i},1)" title="Helbred">+</button>
+        <button class="enc-btn kill" onclick="encRemove(${i})" title="Fjern">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const ENC_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+
 /* ---------------- backup ---------------- */
 function exportBackup(){
   const data = { version:1, exported: new Date().toISOString(), chars, craftedWeapons };
@@ -1433,6 +1724,10 @@ async function handleImport(e){
       id: clampStr(a.id,40), name: clampStr(a.name), weapon: clampStr(a.weapon),
       ability: clampStr(a.ability,10), type: clampStr(a.type,30), prof: !!a.prof,
       combos: (Array.isArray(a.combos)?a.combos:[]).map(co=>({key:clampStr(co.key,40),on:!!co.on,undead:!!co.undead}))
+    })),
+    notes: clampStr(c.notes, 5000),
+    inventory: (Array.isArray(c.inventory)?c.inventory:[]).map(i=>({
+      name: clampStr(i.name), qty: clampInt(i.qty,1,999), lbs: clampInt(i.lbs,0,999)
     }))
   });
   const sanitizeCW = w => ({
@@ -1497,6 +1792,11 @@ function renderHome(){
     <button class="studio-btn" onclick="openDice()">
       <span class="si">${DICE_BTN_ICON}</span>
       <span class="grow">Dice appearance</span>
+      ${CHEV_ICON}
+    </button>
+    <button class="studio-btn" onclick="openEncounter()">
+      <span class="si">${ENC_ICON}</span>
+      <span class="grow">Encounter tracker</span>
       ${CHEV_ICON}
     </button>
     <div class="tools-divider" style="margin-top:14px"><span>Backup</span></div>
@@ -1690,6 +1990,8 @@ function renderDetail(id){
     <div class="section-label" style="margin-top:26px">Attacks &amp; rolls</div>
     <div class="atk-list" id="atkList"></div>
     <div class="add-card" style="margin-top:11px" onclick="newAttack()"><span class="plus">+</span> Add attack</div>
+    ${renderInventory(c)}
+    ${renderNotes(c)}
     <div class="sheet-actions">
       <button class="btn-ghost" style="flex:1" onclick="editChar('${c.id}')">Edit hero</button>
       <button class="btn-ghost" style="flex:1;border-color:rgba(201,162,75,.5);color:var(--gold)" onclick="openLevelUp('${c.id}')">⬆ Level Up</button>
