@@ -386,6 +386,38 @@
   .hp-suggest button{border:1px solid var(--edge-gold);background:transparent;color:var(--gold-hi);border-radius:7px;
     padding:4px 9px;font-family:'Space Mono',monospace;font-size:.62rem;cursor:pointer;white-space:nowrap}
   .hp-suggest button:active{background:rgba(201,162,75,.12)}
+
+  /* ---------- Temp HP ---------- */
+  .temp-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .temp-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(95,168,130,.12);
+    border:1px solid var(--emerald);border-radius:8px;padding:4px 10px;
+    font-family:'Space Mono',monospace;font-size:.72rem;color:#cfeede}
+  .temp-chip b{font-weight:700}
+  .temp-chip .tclear{background:none;border:none;color:#cfeede;opacity:.6;cursor:pointer;font-size:1rem;line-height:1;padding:0 0 0 2px}
+  .temp-btn{border:1px solid var(--emerald);background:transparent;color:#cfeede;border-radius:9px;
+    padding:6px 11px;font-family:'Cinzel',serif;font-weight:700;font-size:.75rem;letter-spacing:.04em;cursor:pointer}
+  .temp-btn:active{background:rgba(95,168,130,.12)}
+
+  /* ---------- Death saves ---------- */
+  .ds-section{margin-top:13px;border-top:1px solid var(--edge);padding-top:12px}
+  .ds-head{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:10px;text-align:center}
+  .ds-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+  .ds-label{font-family:'Space Mono',monospace;font-size:.64rem;width:66px;flex-shrink:0}
+  .ds-label.suc{color:var(--emerald)} .ds-label.fail{color:var(--crimson)}
+  .ds-pips{display:flex;gap:7px}
+  .ds-pip{width:24px;height:24px;border-radius:50%;border:2px solid;background:transparent;cursor:pointer;
+    transition:background .12s;flex-shrink:0}
+  .ds-pip.suc{border-color:var(--emerald)}.ds-pip.suc.on{background:var(--emerald)}
+  .ds-pip.fail{border-color:var(--crimson)}.ds-pip.fail.on{background:var(--crimson)}
+  .ds-roll{width:100%;margin-top:10px;border:1px solid var(--gold);
+    background:linear-gradient(180deg,rgba(201,162,75,.18),rgba(201,162,75,.06));
+    color:var(--gold-hi);border-radius:12px;padding:12px;font-family:'Cinzel',serif;
+    font-weight:700;font-size:.9rem;letter-spacing:.07em;cursor:pointer}
+  .ds-roll:active{transform:scale(.97)}
+  .ds-status{text-align:center;margin-top:9px;font-family:'Cinzel',serif;font-weight:700;
+    font-size:.88rem;letter-spacing:.1em;padding:6px}
+  .ds-status.stable{color:var(--emerald)} .ds-status.dead{color:var(--crimson)}
 </style>
 </head>
 <body>
@@ -907,28 +939,47 @@ function renderHpAc(c){
   const hasHp = c.maxHp!=null && c.maxHp>0;
   const hasAc = c.ac!=null && c.ac>0;
   if(!hasHp && !hasAc) return '';
+
   let hpHtml='';
   if(hasHp){
     const hp = c.hp!=null ? c.hp : c.maxHp;
+    const dying = hp<=0;
     const pct = Math.max(0,Math.min(100,Math.round(hp/c.maxHp*100)));
-    const barClass = pct<=25?'low':pct<=50?'half':'';
-    const curClass = pct<=25?'bloodied':'';
+    const barClass = dying?'low':pct<=25?'low':pct<=50?'half':'';
+    const curClass = dying||pct<=25?'bloodied':'';
+    const tempHp = c.tempHp||0;
+
+    const tempChip = tempHp>0
+      ? `<div class="temp-chip">⚡ <b>+${tempHp}</b> temp<button class="tclear" onclick="clearTempHp('${c.id}')" aria-label="Clear temp HP">×</button></div>`
+      : '';
+
+    const actionBtns = dying ? '' : `
+      <div class="hp-btns">
+        <button class="hp-btn dmg" onclick="bumpHP('${c.id}',-1)">− Damage</button>
+        <button class="hp-btn heal" onclick="bumpHP('${c.id}',1)">+ Heal</button>
+        <button class="hp-btn rest" onclick="restHP('${c.id}')">Rest</button>
+      </div>
+      <div class="temp-row">
+        ${tempChip}
+        <button class="temp-btn" onclick="addTempHp('${c.id}')">⚡ Temp HP</button>
+      </div>`;
+
+    const deathHtml = dying ? renderDeathSaves(c) : '';
+
     hpHtml=`
       <div class="hp-block">
         <div class="hp-label">Hit Points</div>
         <div class="hp-fraction">
-          <span class="hp-cur ${curClass}" id="hpCur">${hp}</span>
+          <span class="hp-cur ${curClass}" id="hpCur">${dying?0:hp}</span>
           <span class="hp-sep">/</span>
           <span class="hp-max">${c.maxHp}</span>
         </div>
-        <div class="hp-bar-wrap"><div class="hp-bar ${barClass}" id="hpBar" style="width:${pct}%"></div></div>
-        <div class="hp-btns">
-          <button class="hp-btn dmg" onclick="bumpHP('${c.id}',-1)">− Damage</button>
-          <button class="hp-btn heal" onclick="bumpHP('${c.id}',1)">+ Heal</button>
-          <button class="hp-btn rest" onclick="restHP('${c.id}')">Rest</button>
-        </div>
+        <div class="hp-bar-wrap"><div class="hp-bar ${barClass}" id="hpBar" style="width:${dying?0:pct}%"></div></div>
+        ${actionBtns}
+        ${deathHtml}
       </div>`;
   }
+
   let acHtml='';
   if(hasAc){
     acHtml=`
@@ -945,28 +996,102 @@ function renderHpAc(c){
   return `<div class="hpac-row">${hpHtml}${acHtml}</div>`;
 }
 
+function renderDeathSaves(c){
+  const ds = c.deathSaves||{s:0,f:0};
+  const stable = ds.s>=3;
+  const dead   = ds.f>=3;
+  const sucPips = [0,1,2].map(i=>`<div class="ds-pip suc${ds.s>i?' on':''}" onclick="toggleDs('${c.id}','s',${i})"></div>`).join('');
+  const failPips= [0,1,2].map(i=>`<div class="ds-pip fail${ds.f>i?' on':''}" onclick="toggleDs('${c.id}','f',${i})"></div>`).join('');
+  const statusHtml = stable
+    ? `<div class="ds-status stable">Stabilized ✓</div>`
+    : dead
+      ? `<div class="ds-status dead">Dead ✗</div>`
+      : '';
+  const rollBtn = (!stable&&!dead)
+    ? `<button class="ds-roll" onclick="rollDeathSave('${c.id}')">🎲 Roll Death Save (d20)</button>`
+    : `<button class="ds-roll" onclick="restHP('${c.id}')">Revive — restore 1 HP</button>`;
+  return `
+    <div class="ds-section">
+      <div class="ds-head">Death Saving Throws</div>
+      <div class="ds-row"><span class="ds-label suc">Successes</span><div class="ds-pips">${sucPips}</div></div>
+      <div class="ds-row"><span class="ds-label fail">Failures</span><div class="ds-pips">${failPips}</div></div>
+      ${statusHtml}
+      ${rollBtn}
+    </div>`;
+}
+
 async function bumpHP(id, direction){
   const c=chars.find(x=>x.id===id); if(!c||c.maxHp==null) return;
   const cur = c.hp!=null?c.hp:c.maxHp;
-  c.hp = Math.max(0,Math.min(c.maxHp, cur + direction));
+  if(direction<0){
+    // burn temp HP first
+    if((c.tempHp||0)>0){ c.tempHp=Math.max(0,(c.tempHp||0)-1); await Store.save(chars); renderDetail(id); return; }
+    const next = Math.max(0, cur-1);
+    if(next===0 && cur>0) c.deathSaves={s:0,f:0}; // just dropped to 0
+    c.hp=next;
+  } else {
+    c.hp=Math.min(c.maxHp, cur+1);
+    if(c.hp>0) c.deathSaves={s:0,f:0}; // healed — reset saves
+  }
   await Store.save(chars);
-  // fast update without full re-render
-  const hpCur=document.getElementById('hpCur');
-  const hpBar=document.getElementById('hpBar');
-  if(hpCur&&hpBar){
-    hpCur.textContent=c.hp;
-    const pct=Math.max(0,Math.min(100,Math.round(c.hp/c.maxHp*100)));
-    hpBar.style.width=pct+'%';
-    hpBar.className='hp-bar'+(pct<=25?' low':pct<=50?' half':'');
-    hpCur.className='hp-cur'+(pct<=25?' bloodied':'');
-  } else { renderDetail(id); }
+  renderDetail(id);
 }
 
 async function restHP(id){
   const c=chars.find(x=>x.id===id); if(!c||c.maxHp==null) return;
-  c.hp=c.maxHp;
+  // dying → revive at 1 HP; alive → long rest → full HP
+  c.hp = (c.hp||0)<=0 ? 1 : c.maxHp;
+  c.deathSaves={s:0,f:0};
+  c.tempHp=0;
   await Store.save(chars);
   renderDetail(id);
+}
+
+async function addTempHp(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  const v=parseInt(prompt('Temp HP to add (takes the higher value):', (c.tempHp||0)||''));
+  if(!v||isNaN(v)||v<=0) return;
+  c.tempHp=Math.max(c.tempHp||0, v); // temp HP doesn't stack — use higher
+  await Store.save(chars);
+  renderDetail(id);
+}
+
+async function clearTempHp(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  c.tempHp=0; await Store.save(chars); renderDetail(id);
+}
+
+async function toggleDs(id, type, idx){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  if(!c.deathSaves) c.deathSaves={s:0,f:0};
+  const key=type==='s'?'s':'f';
+  // clicking pip idx toggles count between idx+1 and idx
+  c.deathSaves[key] = c.deathSaves[key]===idx+1 ? idx : idx+1;
+  await Store.save(chars); renderDetail(id);
+}
+
+async function rollDeathSave(id){
+  const c=chars.find(x=>x.id===id); if(!c) return;
+  if(!c.deathSaves) c.deathSaves={s:0,f:0};
+  const roll=Math.floor(Math.random()*20)+1;
+  buzz(14);
+  let msg='';
+  if(roll===20){
+    c.hp=1; c.deathSaves={s:0,f:0};
+    msg=`Nat 20! Back on your feet with 1 HP!`;
+  } else if(roll===1){
+    c.deathSaves.f=Math.min(3,c.deathSaves.f+2);
+    msg=`Nat 1 — two failures! (rolled 1)`;
+  } else if(roll>=10){
+    c.deathSaves.s=Math.min(3,c.deathSaves.s+1);
+    msg=`Success (rolled ${roll})`;
+  } else {
+    c.deathSaves.f=Math.min(3,c.deathSaves.f+1);
+    msg=`Failure (rolled ${roll})`;
+  }
+  await Store.save(chars);
+  renderDetail(id);
+  setTimeout(()=>alert(msg),80); // brief delay so re-render settles first
 }
 
 /* ---- HP auto-suggest in editor ---- */
