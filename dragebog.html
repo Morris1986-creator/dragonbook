@@ -424,14 +424,19 @@
   .cef.norm{border-color:var(--edge-gold)}
 
   /* ---------- dice appearance studio ---------- */
-  .studio-btn{display:flex;align-items:center;gap:13px;width:100%;margin-top:18px;cursor:pointer;
-    background:linear-gradient(180deg,var(--surface),#220f14);border:1px solid var(--edge);border-radius:14px;padding:13px 15px;
-    color:var(--bone);font-family:'Cinzel',serif;font-weight:600;letter-spacing:.04em;font-size:.98rem}
+  .studio-btn{display:flex;align-items:center;gap:13px;width:100%;margin-top:10px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(201,162,75,.13),rgba(201,162,75,.05));
+    border:1px solid var(--edge-gold);border-radius:14px;padding:13px 15px;
+    color:var(--gold-hi);font-family:'Cinzel',serif;font-weight:600;letter-spacing:.04em;font-size:.98rem}
   .studio-btn:active{transform:scale(.99)}
-  .studio-btn .si{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold);color:var(--gold-hi);flex-shrink:0}
+  .studio-btn .si{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    background:rgba(201,162,75,.18);border:1px solid var(--gold);color:var(--gold-hi);flex-shrink:0}
   .studio-btn .si svg{width:20px;height:20px}
   .studio-btn .grow{flex:1;text-align:left}
-  .studio-btn .chev{color:var(--muted);flex-shrink:0}
+  .studio-btn .chev{color:var(--gold);flex-shrink:0}
+  .tools-divider{margin:26px 0 4px;display:flex;align-items:center;gap:10px}
+  .tools-divider::before,.tools-divider::after{content:'';flex:1;height:1px;background:var(--edge)}
+  .tools-divider span{font-family:'Cinzel',serif;font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 
   .dice-preview{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:var(--bg2);
     border:1px solid var(--edge);border-radius:16px;padding:18px 10px;margin-bottom:22px}
@@ -683,16 +688,7 @@
     <div class="license-note" id="licenseNote" hidden>This work includes material from the System Reference Document 5.1 ("SRD 5.1") by Wizards of the Coast LLC, available under the Creative Commons Attribution 4.0 International License.</div>
     <div class="section-label" id="rosterLabel">Your heroes</div>
     <div class="roster" id="roster"></div>
-    <button class="studio-btn" onclick="openCraft()">
-      <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
-      <span class="grow">Crafting — forge custom weapons</span>
-      <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
-    </button>
-    <button class="studio-btn" onclick="openDice()">
-      <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></span>
-      <span class="grow">Dice appearance</span>
-      <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
-    </button>
+    <div id="homeTools"></div>
   </section>
 
   <!-- ============ CREATE / EDIT ============ -->
@@ -1176,6 +1172,10 @@ function go(view){
 function toggleLicense(){ const n=document.getElementById('licenseNote'); if(n) n.hidden=!n.hidden; }
 
 /* ---------------- home ---------------- */
+const CRAFT_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+const DICE_BTN_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg>`;
+const CHEV_ICON=`<svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>`;
+
 function renderHome(){
   const roster=document.getElementById('roster');
   document.getElementById('rosterLabel').style.display = chars.length?'block':'none';
@@ -1186,6 +1186,7 @@ function renderHome(){
         Forge your first character — name, race, class, and ability scores.
       </div>
       <div class="add-card" onclick="newChar()"><span class="plus">+</span> Create your first character</div>`;
+    document.getElementById('homeTools').innerHTML='';
     return;
   }
   roster.innerHTML = chars.map(c=>{
@@ -1200,6 +1201,19 @@ function renderHome(){
       <svg class="chev" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l6 6-6 6"/></svg>
     </div>`;
   }).join('') + `<div class="add-card" onclick="newChar()"><span class="plus">+</span> New character</div>`;
+
+  document.getElementById('homeTools').innerHTML=`
+    <div class="tools-divider"><span>Tools</span></div>
+    <button class="studio-btn" onclick="openCraft()">
+      <span class="si">${CRAFT_ICON}</span>
+      <span class="grow">Crafting — forge custom weapons</span>
+      ${CHEV_ICON}
+    </button>
+    <button class="studio-btn" onclick="openDice()">
+      <span class="si">${DICE_BTN_ICON}</span>
+      <span class="grow">Dice appearance</span>
+      ${CHEV_ICON}
+    </button>`;
 }
 function esc(s){return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
 
